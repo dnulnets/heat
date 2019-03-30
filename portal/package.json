@@ -1,0 +1,19 @@
+{
+    "name": "slip",
+    "version": "1.0.0",
+    "main": "index.js",
+    "author": "Tomas Stenlund",
+    "license": "MIT",
+    "scripts": {
+        "postinstall": "bower install",
+        "build": "pulp --then 'parcel build assets/index.html' build --to dist/app.js",
+        "build-dev": "pulp build",
+        "watch-dev": "pulp -w build",
+        "build-serve": "pulp --then 'parcel build assets/index.html && http-server dist' build --to dist/app.js",
+        "serve": "http-server dist -c-1",
+        "watch-serve": "pulp -w --then 'parcel build assets/index.html && http-server dist' build --to dist/app.js"
+    },
+    "devDependencies": {
+        "cssnano": "^4.1.10"
+    }
+}
