@@ -49,7 +49,7 @@ render state =
   HH.nav
   [css "navbar navbar-expand-md navbar-dark fixed-top bg-dark"]
   [HH.a
-   [css "navbar-brand"]
+   [css "navbar-brand", HP.href ""]
    [HH.text "SLIP Portal"],
    HH.button
    [css "navbar-toggler", HP.type_ ButtonButton, HPA.controls "navbarCollapse", HPA.expanded "false",
@@ -65,7 +65,7 @@ render state =
     [HH.li
      [css "nav-item active"]
      [HH.a
-      [css "nav-link"]
+      [css "nav-link", HP.href ""]
       [HH.text "Home",
        HH.span
        [css "sr-only"]
@@ -75,7 +75,7 @@ render state =
      HH.li
      [css "nav-item"]
      [HH.a
-      [css "nav-link"]
+      [css "nav-link", HP.href ""]
       [HH.text "Users"]
      ]    
     ]
