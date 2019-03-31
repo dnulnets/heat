@@ -9,6 +9,10 @@ module Slip.Root  where
 import Prelude
 import Data.Maybe (Maybe(..))
 import Data.Symbol (SProxy(..))
+import Control.Monad.Reader.Trans (class MonadAsk, ask, asks)
+import Effect.Ref (Ref)
+import Effect.Ref as Ref
+import Effect.Aff.Class (class MonadAff)
 
 -- | Halogen imports
 import Halogen as H
@@ -33,7 +37,11 @@ _alert = SProxy::SProxy "alert"
 _footer = SProxy::SProxy "footer"
 
 -- | The root component definition
-component :: forall f i o m. H.Component HH.HTML f i o m
+component :: forall f i o m r
+             .
+             MonadAff m
+             => MonadAsk { currentUser :: Ref (Maybe String) | r } m
+             => H.Component HH.HTML f i o m
 component =
   H.mkComponent
     { initialState
@@ -47,7 +55,17 @@ initialState _ = { user: Nothing }
 
 -- | Render the root application
 render :: forall a m. State -> H.ComponentHTML a ChildSlots m
-render state = HH.div
+render state = do
+--  name <- H.liftEffect <<< Ref.read =<< asks _.currentUser
+  render_ state "Tomas"
+
+-- render state = do
+--  name <- asks _.currentUser
+--  html <- HH.text "tomas"
+--  pure $ html
+  
+render_ :: forall a m. State -> String -> H.ComponentHTML a ChildSlots m
+render_ state name = HH.div
                [css "container"]
                [HH.slot _menu unit Menu.component unit absurd,
                 HH.div
@@ -78,5 +96,4 @@ render state = HH.div
                 []
                 [HH.slot _footer unit Footer.component unit absurd]
                ]
-               
-               
+
