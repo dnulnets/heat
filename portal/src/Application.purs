@@ -3,20 +3,26 @@
 -- |
 -- | Written by Tomas Stenlund, Sundsvall, Sweden (c) 2019
 -- |
-module Slip.Application (Application,
-                         LogLevel (..),
-                         runApplication,
-                         Environment (..)) where
+module Application where
 
 -- | Language imports
 import Prelude
 import Data.Maybe (Maybe)
+
+import Effect (Effect)
 import Effect.Aff (Aff)
-import Effect.Aff.Class (class MonadAff)
-import Effect.Class (class MonadEffect)
+import Effect.Aff.Class (class MonadAff, liftAff)
+import Effect.Class (class MonadEffect, liftEffect)
 import Effect.Ref (Ref)
+import Effect.Ref as Ref
+
 import Type.Equality (class TypeEquals, from)
-import Control.Monad.Reader.Trans (class MonadAsk, ReaderT, asks, runReaderT)
+
+import Control.Monad.Reader (ask, asks, runReaderT)
+import Control.Monad.Reader.Class (class MonadAsk)
+import Control.Monad.Reader.Trans (ReaderT)
+
+import Data.Newtype (class Newtype, unwrap)
 
 -- | Type of logging to perform
 data LogLevel = Development | Production
@@ -24,14 +30,18 @@ derive instance eqLogLevel :: Eq LogLevel
 derive instance ordLogLevel :: Ord LogLevel
 
 -- | The application environment
-type Environment = 
-  { logLevel :: LogLevel 
-  , baseURL :: String
-  , currentUser :: Ref (Maybe String)
-}
+type Environment = {
+  userName :: String
+  }
+                   
+--  { logLevel :: LogLevel 
+--  , baseURL :: String
+--  , currentUser :: Ref (Maybe String)
+-- }
 
 -- | The application monad
 newtype Application a = Application (ReaderT Environment Aff a)
+derive instance newtypeApplication :: Newtype (Application a) _
 
 -- | Run the application monad and expose the inner Aff monad
 runApplication :: Environment -> Application ~> Aff
