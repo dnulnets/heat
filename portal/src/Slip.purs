@@ -1,9 +1,11 @@
 -- |
--- | The application monad
+-- | The Slip Application Monad module
 -- |
 -- | Written by Tomas Stenlund, Sundsvall, Sweden (c) 2019
 -- |
-module Application where
+module Slip(Environment,
+            runApplication,
+            ApplicationM) where
 
 -- | Language imports
 import Prelude
@@ -40,7 +42,7 @@ type Environment = {
 
 -- | The application monad
 newtype ApplicationM a = ApplicationM (ReaderT Environment Aff a)
-derive instance newtypeApplication :: Newtype (ApplicationM a) _
+-- derive instance newtypeApplication :: Newtype (ApplicationM a) _
 
 -- | Run the application monad and expose the inner Aff monad
 runApplication :: Environment -> ApplicationM ~> Aff

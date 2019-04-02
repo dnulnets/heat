@@ -1,5 +1,5 @@
 -- |
--- | The main application
+-- | The Main application startup module
 -- |
 -- | Written by Tomas Stenlund, Sundsvall, Sweden (c) 2019
 -- |
@@ -18,19 +18,19 @@ import Halogen as H
 import Halogen.HTML as HH
 
 -- | Slip imports
-import Application as APP
+import Slip (Environment, runApplication)
 import Slip.Root as Root
+
+-- | Set up our environment which we will execute in
+environment :: Environment
+environment = { userName : "Tomas Stenlund"}
+
+-- | Hoist in our Application monad
+rootComponent :: forall q i . H.Component HH.HTML q i Void Aff
+rootComponent = hoist (runApplication environment) Root.component
 
 -- | The main function
 main :: Effect Unit
 main = HA.runHalogenAff do
   body <- HA.awaitBody
-  let
-        
-    environment :: APP.Environment
-    environment = { userName : "Tomas Stenlund"}
-
-    rootComponent :: forall q i. H.Component HH.HTML q i Void Aff
-    rootComponent = hoist (APP.runApplication environment) Root.component
-
   runUI rootComponent unit body
