@@ -25,6 +25,7 @@ import Slip.Component.HTML.Utils (css, style)
 import Slip.Component.Menu as Menu
 import Slip.Component.Alert as Alert
 import Slip.Component.Footer as Footer
+import Slip.Component.Login as Login
 
 data Action = SetUser
 
@@ -34,11 +35,13 @@ type State = { user :: Maybe String  }
 -- | The set of slots for the root container
 type ChildSlots = ( menu :: Menu.Slot Unit,
                     alert :: Alert.Slot Unit,
-                    footer :: Footer.Slot Unit)
+                    footer :: Footer.Slot Unit,
+                    login :: Login.Slot Unit)
                   
 _menu = SProxy::SProxy "menu"
 _alert = SProxy::SProxy "alert"
 _footer = SProxy::SProxy "footer"
+_login = SProxy::SProxy "login"
 
 -- | The root component definition
 component :: forall q i o r m
@@ -70,22 +73,7 @@ render state = HH.div
                 ],
                 HH.main
                 [ ]
-                [HH.div
-                 [css "container", style "margin-top:20px"]
-                 [HH.div
-                  [css "row"]
-                  [HH.div
-                   [css "col-md-12"]
-                   [HH.div
-                    [css "col-md-3 col-md-offset-1"]
-                    [HH.h2
-                     []
-                     [HH.text "Router page"]
-                    ]
-                   ]
-                  ]
-                 ]
-                ],
+                [HH.slot _login unit Login.component unit absurd],
                 HH.div
                 []
                 [HH.slot _footer unit Footer.component unit absurd]
