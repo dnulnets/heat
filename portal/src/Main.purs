@@ -32,5 +32,5 @@ rootComponent = hoist (runApplication environment) Root.component
 -- | The main function
 main :: Effect Unit
 main = HA.runHalogenAff do
-  body <- HA.awaitBody
+  body ← HA.awaitBody
   runUI rootComponent unit body

@@ -44,11 +44,10 @@ _footer = SProxy::SProxy "footer"
 _login = SProxy::SProxy "login"
 
 -- | The root component definition
-component :: forall q i o r m
-             .
+component :: ∀ q i o r m .
              MonadAff m
-             => MonadAsk { userName :: String | r } m
-             => H.Component HH.HTML q i o m
+             ⇒ MonadAsk { userName :: String | r } m
+             ⇒ H.Component HH.HTML q i o m
 component =
   H.mkComponent
     { initialState
