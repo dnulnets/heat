@@ -21,12 +21,17 @@ import Halogen as H
 import Halogen.HTML as HH
 
 -- | Slip imports
+import Slip.Data.Route (Page(..))
 import Slip.Component.HTML.Utils (css, style)
 import Slip.Component.Menu as Menu
 import Slip.Component.Alert as Alert
 import Slip.Component.Footer as Footer
 import Slip.Component.Login as Login
 
+-- | The querys supported by the root page
+data Query a = ChangeRoute Page a
+
+-- | The actions supported by the root page
 data Action = SetUser
 
 -- | The state for the application, it will contain the logged in user among other things
@@ -44,15 +49,16 @@ _footer = SProxy::SProxy "footer"
 _login = SProxy::SProxy "login"
 
 -- | The root component definition
-component :: ∀ q i o r m .
+component :: ∀ i o r m .
              MonadAff m
              ⇒ MonadAsk { userName :: String | r } m
-             ⇒ H.Component HH.HTML q i o m
+             ⇒ H.Component HH.HTML Query i o m
 component =
   H.mkComponent
     { initialState
     , render
-    , eval: H.mkEval $ H.defaultEval { handleAction = handleAction }
+    , eval: H.mkEval $ H.defaultEval { handleAction = handleAction,
+                                       handleQuery = handleQuery }
     }
 
 -- | Initial state, for instance a not logged in user
@@ -77,6 +83,15 @@ render state = HH.div
                 []
                 [HH.slot _footer unit Footer.component unit absurd]
                ]
+
+handleQuery ∷ ∀ act r o m a .
+              MonadAff m ⇒ 
+              MonadAsk { userName :: String | r } m ⇒ 
+              Query a → H.HalogenM State act ChildSlots o m (Maybe a)
+handleQuery = case _ of
+  ChangeRoute msg a -> do
+    H.liftEffect $ log $ show msg
+    pure (Just a)
 
 handleAction ∷ ∀ r o m .
                 MonadAff m ⇒
