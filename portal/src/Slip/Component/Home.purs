@@ -15,12 +15,7 @@ import Halogen.HTML as HH
 
 -- | Our own stuff
 import Slip.Component.HTML.Utils (css, style)
-
--- | Query algebra for the component
-data Query a = User (Maybe String → a)
-
--- | Slot type for the componet
-type Slot = H.Slot Query Void
+import Slip.Child (Query, Slot)
 
 -- | State for the component
 type State = { }

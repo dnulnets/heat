@@ -57,7 +57,7 @@ hashChangeConsumer query = CR.consumer \event -> do
       newPage = case result of
         Left _ -> Home
         Right page -> page
-  void $ query $ H.tell $ Root.ChangeRoute newPage
+  void $ query $ H.tell $ Root.GotoPage newPage
   pure Nothing
 
 -- | Set up our environment which we will execute in
