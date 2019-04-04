@@ -42,7 +42,7 @@ type State = { user ∷ Maybe String,
 type ChildSlots = ( menu ∷ Menu.Slot Unit,
                     alert ∷ Alert.Slot Unit,
                     footer ∷ Footer.Slot Unit,
-                    main ∷ C.Slot Unit)
+                    main ∷ C.Slot String)
                   
 _menu = SProxy::SProxy "menu"
 _alert = SProxy::SProxy "alert"
@@ -67,7 +67,7 @@ initialState ∷ ∀ i. i → State
 initialState _ = { user: Nothing,
                    page: Home }
 
--- | Render the root application
+-- | Render the root application, it contains a menu, alert data, main page view and a footer
 render ∷ ∀ a m. State → H.ComponentHTML a ChildSlots m
 render state = HH.div
                [css "container"]
@@ -76,7 +76,7 @@ render state = HH.div
                 [css "row"]
                 [HH.div
                  [css "col-md-12"]
-                 [HH.slot _alert unit Alert.component unit absurd, HH.h2 [] [HH.text $ fromMaybe "Nobody" state.user], HH.h2 [] [HH.text $ show state.page]]
+                 [HH.slot _alert unit Alert.component unit absurd]
                 ],
                 HH.main
                 [ ]
@@ -86,9 +86,10 @@ render state = HH.div
                 [HH.slot _footer unit Footer.component unit absurd]
                ]
 
+-- | Render the main view of the page
 view ∷ ∀ a m. Page → H.ComponentHTML a ChildSlots m
-view Login = HH.slot _main unit Login.component unit absurd
-view Home = HH.slot _main unit Home.component unit absurd
+view Login = HH.slot _main "login" Login.component unit absurd
+view Home = HH.slot _main "home" Home.component unit absurd
 view Error = HH.div
              [css "container", style "margin-top:20px"]
              [HH.div
@@ -105,6 +106,7 @@ view Error = HH.div
               ]
              ]
 
+-- | Handle the route change from the browser
 handleQuery ∷ ∀ act r o m a .
               MonadAff m ⇒ 
               MonadAsk { userName :: String | r } m ⇒ 
@@ -115,6 +117,7 @@ handleQuery = case _ of
     H.put $ state { page = page }
     pure (Just a)
 
+-- | Just a placeholder for how to write a handler for actions
 handleAction ∷ ∀ r o m .
                 MonadAff m ⇒
                 MonadAsk { userName :: String | r } m ⇒

@@ -40,7 +40,7 @@ import Slip (Environment, runApplication)
 import Slip.Root as Root
 import Slip.Data.Route (router, Page(..))
 
--- |
+-- | Produce events from the browser for route changes
 hashChangeProducer ∷ CR.Producer HCE.HashChangeEvent Aff Unit
 hashChangeProducer = CRA.produce \emitter -> do
   listener ← DOM.eventListener (traverse_ (emit emitter) <<< HCE.fromEvent)
@@ -49,7 +49,8 @@ hashChangeProducer = CRA.produce \emitter -> do
       >>= Window.toEventTarget
       >>> DOM.addEventListener HCET.hashchange listener false
 
--- |
+-- | Handle the change message and parse the URL to extract the page and page paramters and send it to
+-- | the root page
 hashChangeConsumer ∷ (∀ a. Root.Query a -> Aff (Maybe a)) → CR.Consumer HCE.HashChangeEvent Aff Unit
 hashChangeConsumer query = CR.consumer \event -> do
   let hash = Str.drop 1 $ Str.dropWhile (_ /= '#') $ HCE.newURL event
