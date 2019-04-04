@@ -30,13 +30,13 @@ import Slip.Component.Login as Login
 data Action = SetUser
 
 -- | The state for the application, it will contain the logged in user among other things
-type State = { user :: Maybe String  }
+type State = { user ∷ Maybe String  }
 
 -- | The set of slots for the root container
-type ChildSlots = ( menu :: Menu.Slot Unit,
-                    alert :: Alert.Slot Unit,
-                    footer :: Footer.Slot Unit,
-                    login :: Login.Slot Unit)
+type ChildSlots = ( menu ∷ Menu.Slot Unit,
+                    alert ∷ Alert.Slot Unit,
+                    footer ∷ Footer.Slot Unit,
+                    login ∷ Login.Slot Unit)
                   
 _menu = SProxy::SProxy "menu"
 _alert = SProxy::SProxy "alert"
@@ -56,11 +56,11 @@ component =
     }
 
 -- | Initial state, for instance a not logged in user
-initialState :: forall i. i -> State
+initialState ∷ ∀ i. i → State
 initialState _ = { user: Nothing }
 
 -- | Render the root application
-render :: forall a m. State -> H.ComponentHTML a ChildSlots m
+render ∷ ∀ a m. State → H.ComponentHTML a ChildSlots m
 render state = HH.div
                [css "container"]
                [HH.slot _menu unit Menu.component unit absurd,
@@ -78,10 +78,10 @@ render state = HH.div
                 [HH.slot _footer unit Footer.component unit absurd]
                ]
 
-handleAction :: forall r o m .
-                MonadAff m =>
-                MonadAsk { userName :: String | r } m =>
-                Action -> H.HalogenM State Action ChildSlots o m Unit
+handleAction ∷ ∀ r o m .
+                MonadAff m ⇒
+                MonadAsk { userName :: String | r } m ⇒
+                Action → H.HalogenM State Action ChildSlots o m Unit
 handleAction SetUser =
   do
     H.liftEffect $ log "Hejsan"

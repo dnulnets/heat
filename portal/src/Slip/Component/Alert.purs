@@ -17,20 +17,20 @@ import Halogen.HTML as HH
 import Slip.Component.HTML.Utils (css, style)
 
 -- | Query algebra for the component
-data Query a = Dummy (Void -> a)
+data Query a = Dummy (Void → a)
 
 -- | Slot type for the alert
 type Slot = H.Slot Query Void
 
 -- | State for the alert
-type State = { message :: Maybe String }
+type State = { message ∷ Maybe String }
 
 -- | Initial state is no logged in user
-initialState :: forall i. i -> State
+initialState ∷ ∀ i. i → State
 initialState _ = { message: Nothing }
 
 -- | The component definition
-component :: forall q i o m. H.Component HH.HTML q i o m
+component ∷ ∀ q i o m. H.Component HH.HTML q i o m
 component =
   H.mkComponent
     { initialState
@@ -39,7 +39,7 @@ component =
     }
 
 -- | Render the alert
-render :: forall a m. State -> H.ComponentHTML a () m
+render ∷ ∀ a m. State → H.ComponentHTML a () m
 render state = HH.div
                [css "alert alert-danger", style "margin-top:20px"]
                [HH.text $ fromMaybe "Unknown error" state.message ]

@@ -22,15 +22,15 @@ import Slip (Environment, runApplication)
 import Slip.Root as Root
 
 -- | Set up our environment which we will execute in
-environment :: Environment
+environment ∷ Environment
 environment = { userName : "Tomas Stenlund"}
 
 -- | Hoist in our Application monad
-rootComponent :: forall q i . H.Component HH.HTML q i Void Aff
+rootComponent ∷ ∀ q i . H.Component HH.HTML q i Void Aff
 rootComponent = hoist (runApplication environment) Root.component
 
 -- | The main function
-main :: Effect Unit
+main ∷ Effect Unit
 main = HA.runHalogenAff do
   body ← HA.awaitBody
   runUI rootComponent unit body

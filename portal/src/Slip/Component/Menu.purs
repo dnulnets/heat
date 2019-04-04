@@ -22,16 +22,16 @@ import DOM.HTML.Indexed.ButtonType (ButtonType(..))
 import Slip.Component.HTML.Utils (css, prop)
 
 -- | Quer yalgebra for the component
-data Query a = Dummy (Void -> a)
+data Query a = Dummy (Void → a)
 
 -- | Slot type for the menu
 type Slot = H.Slot Query Void
 
 -- | State for the meny, we have a user so far
-type State = { user :: Maybe String }
+type State = { user ∷ Maybe String }
 
 -- | Initial state is no logged in user
-initialState :: forall i. i -> State
+initialState ∷ ∀ i. i -> State
 initialState _ = { user: Nothing }
 
 -- | The component definition
@@ -44,7 +44,7 @@ component =
     }
 
 -- | Render the menu
-render :: forall a m. State -> H.ComponentHTML a () m
+render ∷ ∀ a m. State → H.ComponentHTML a () m
 render state =
   HH.nav
   [css "navbar navbar-expand-md navbar-dark fixed-top bg-dark"]

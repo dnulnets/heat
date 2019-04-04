@@ -27,17 +27,17 @@ import Data.Newtype (class Newtype)
 
 -- | Type of logging to perform
 data LogLevel = Development | Production
-derive instance eqLogLevel :: Eq LogLevel
-derive instance ordLogLevel :: Ord LogLevel
+derive instance eqLogLevel ∷ Eq LogLevel
+derive instance ordLogLevel ∷ Ord LogLevel
 
 -- | The application environment
 type Environment = {
-  userName :: String
+  userName ∷ String
   }
                    
---  { logLevel :: LogLevel 
---  , baseURL :: String
---  , currentUser :: Ref (Maybe String)
+--  { logLevel ∷ LogLevel 
+--  , baseURL ∷ String
+--  , currentUser ∷ Ref (Maybe String)
 -- }
 
 -- | The application monad
@@ -45,18 +45,18 @@ newtype ApplicationM a = ApplicationM (ReaderT Environment Aff a)
 -- derive instance newtypeApplication :: Newtype (ApplicationM a) _
 
 -- | Run the application monad and expose the inner Aff monad
-runApplication :: Environment -> ApplicationM ~> Aff
+runApplication :: Environment → ApplicationM ~> Aff
 runApplication env (ApplicationM m) = runReaderT m env
 
 -- | Derive all monad functions
-derive newtype instance functorApplication :: Functor ApplicationM
-derive newtype instance applyApplication :: Apply ApplicationM
-derive newtype instance applicativeApplication :: Applicative ApplicationM
-derive newtype instance bindApplication :: Bind ApplicationM
-derive newtype instance monadApplication :: Monad ApplicationM
-derive newtype instance monadEffectApplication :: MonadEffect ApplicationM
-derive newtype instance monadAffApplication :: MonadAff ApplicationM
+derive newtype instance functorApplication ∷ Functor ApplicationM
+derive newtype instance applyApplication ∷ Apply ApplicationM
+derive newtype instance applicativeApplication ∷ Applicative ApplicationM
+derive newtype instance bindApplication ∷ Bind ApplicationM
+derive newtype instance monadApplication ∷ Monad ApplicationM
+derive newtype instance monadEffectApplication ∷ MonadEffect ApplicationM
+derive newtype instance monadAffApplication ∷ MonadAff ApplicationM
 
 -- | ask implementation
-instance monadAskApplication :: TypeEquals e Environment => MonadAsk e ApplicationM where
+instance monadAskApplication ∷ TypeEquals e Environment ⇒ MonadAsk e ApplicationM where
   ask = ApplicationM $ asks from
