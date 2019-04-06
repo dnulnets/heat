@@ -19,6 +19,7 @@ import Halogen.HTML.Events as HE
 
 -- | Our own stuff
 import Slip.Component.HTML.Utils (css, style)
+import Slip.Data.Route (Page(..))
 
 -- | State for the component
 type State = { username∷Maybe String,
@@ -28,6 +29,9 @@ type State = { username∷Maybe String,
 initialState ∷ ∀ i. i → State
 initialState _ = { username : Nothing,
                    password : Nothing }
+
+-- | Messages sent out from the component
+data Output = GotoPage Page
 
 -- | Internal form actions
 data Action = Submit

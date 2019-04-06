@@ -32,7 +32,8 @@ import Slip.Component.Home as Home
 data Query a = GotoPage Page a
 
 -- | The actions supported by the root page
-data Action = SetUser
+data Action = SetUser |
+              MainMessage Login.Output
 
 -- | The state for the application, it will contain the logged in user among other things
 type State = { user ∷ Maybe String,
@@ -122,9 +123,15 @@ handleAction ∷ ∀ r o m .
                 MonadAff m ⇒
                 MonadAsk { userName :: String | r } m ⇒
                 Action → H.HalogenM State Action ChildSlots o m Unit
+
 handleAction SetUser =
   do
     H.liftEffect $ log "Hejsan"
     name <- lift $ asks _.userName
     state <- H.get
     H.put $ state { user = Just name }
+    
+handleAction (MainMessage (Login.GotoPage page)) =
+  do
+    H.liftEffect $ log "Go to a new page"
+    
