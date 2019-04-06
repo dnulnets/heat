@@ -7,7 +7,7 @@ module Slip.Root  where
 
 -- | Language imports
 import Prelude
-import Data.Maybe (fromMaybe, Maybe(..))
+import Data.Maybe (Maybe(..))
 import Data.Symbol (SProxy(..))
 import Control.Monad.Reader.Trans (class MonadAsk, asks)
 import Control.Monad.Trans.Class (lift)
@@ -68,7 +68,7 @@ initialState _ = { user: Nothing,
                    page: Home }
 
 -- | Render the root application, it contains a menu, alert data, main page view and a footer
-render ∷ ∀ a m. State → H.ComponentHTML a ChildSlots m
+render ∷ ∀ a m . MonadAff m ⇒ State → H.ComponentHTML a ChildSlots m
 render state = HH.div
                [css "container"]
                [HH.slot _menu unit Menu.component unit absurd,
@@ -87,7 +87,7 @@ render state = HH.div
                ]
 
 -- | Render the main view of the page
-view ∷ ∀ a m. Page → H.ComponentHTML a ChildSlots m
+view ∷ ∀ a m. MonadAff m ⇒ Page → H.ComponentHTML a ChildSlots m
 view Login = HH.slot _main "login" Login.component unit absurd
 view Home = HH.slot _main "home" Home.component unit absurd
 view Error = HH.div

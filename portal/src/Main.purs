@@ -14,6 +14,7 @@ import Data.String.CodeUnits as Str
 import Effect (Effect)
 import Effect.Aff (Aff)
 import Effect.Class (liftEffect)
+import Effect.Console (log)
 import Control.Coroutine as CR
 import Control.Coroutine.Aff (emit)
 import Control.Coroutine.Aff as CRA
@@ -58,6 +59,7 @@ hashChangeConsumer query = CR.consumer \event -> do
       newPage = case result of
         Left _ -> Home
         Right page -> page
+  liftEffect $ log $ "New URL = " <> HCE.newURL event
   void $ query $ H.tell $ Root.GotoPage newPage
   pure Nothing
 
