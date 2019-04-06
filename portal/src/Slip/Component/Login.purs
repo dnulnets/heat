@@ -11,6 +11,10 @@ import Prelude
 -- | Halogen import
 import Halogen as H
 import Halogen.HTML as HH
+import Halogen.HTML.Properties as HP
+
+-- | DOM import
+import DOM.HTML.Indexed.InputType (InputType(..))
 
 -- | Our own stuff
 import Slip.Component.HTML.Utils (css, style)
@@ -32,7 +36,7 @@ component =
     }
 
 -- | Render the alert
-render ∷ ∀ a m. State -> H.ComponentHTML a () m
+render ∷ ∀ a m. State → H.ComponentHTML a () m
 render state = HH.div
                [css "container", style "margin-top:20px"]
                [HH.div
@@ -43,7 +47,23 @@ render state = HH.div
                   [css "col-md-3 col-md-offset-1"]
                   [HH.h2
                    []
-                   [HH.text "Login page"]
+                   [HH.text "Login"],
+                   HH.form
+                    [HP.name "form"]
+                    [HH.div
+                     [css "form-group"]
+                     [HH.label [HP.for "username"][HH.text "Username"],
+                      HH.input [css "form-control", HP.name "username", HP.type_ InputText, HP.required true]
+                     ],
+                     HH.div
+                     [css "form-group"]
+                     [HH.label [HP.for "password"][HH.text "Password"],
+                      HH.input [css "form-control", HP.name "password", HP.type_ InputPassword, HP.required true]
+                     ],HH.div
+                     [css "form-group"]
+                     [HH.button [css "btn btn-primary"][HH.text "Login"]
+                     ]
+                    ]
                   ]
                  ]
                 ]
