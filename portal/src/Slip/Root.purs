@@ -28,6 +28,7 @@ import Slip.Component.Alert as Alert
 import Slip.Component.Footer as Footer
 import Slip.Component.Login as Login
 import Slip.Component.Home as Home
+import Slip.Data.Alert as A
 
 -- | The querys supported by the root page
 data Query a = GotoPage Page a
@@ -79,7 +80,7 @@ render state = HH.div
                 [css "row"]
                 [HH.div
                  [css "col-md-12"]
-                 [HH.slot _alert unit Alert.component unit absurd]
+                 [HH.slot _alert unit Alert.component Nothing absurd]
                 ],
                 HH.main
                 [ ]

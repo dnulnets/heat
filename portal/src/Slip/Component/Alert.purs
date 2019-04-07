@@ -17,20 +17,23 @@ import Halogen.HTML as HH
 
 -- | Our own stuff
 import Slip.Component.HTML.Utils (css, style, maybeElem)
-import Slip.Data.Alert (AlertType(..))
+import Slip.Data.Alert as A
 
 -- | Query algebra for the component
-data Query a = Alert AlertType String a
+data Query a = Alert A.AlertType String a
+
+-- | Input to the component, is an alert or nothing
+type Input = Maybe A.Alert
 
 -- | Internal actions
-data Action = Render
+data Action = HandleInput Input
 
 -- | Slot type for the alert
 type Slot = H.Slot Query Void
 
 -- | State for the alert
 type State = { message ∷ Maybe String,
-               level ∷ Maybe AlertType,
+               level ∷ Maybe A.AlertType,
                displayed ∷ Boolean }
 
 -- | Initial state is no logged in user
@@ -40,32 +43,34 @@ initialState _ = { message : Nothing,
                    displayed : false }
 
 -- | The component definition
-component ∷ ∀ i o m .
+component ∷ ∀ o m .
             MonadAff m ⇒
-            H.Component HH.HTML Query i o m
+            H.Component HH.HTML Query Input o m
 component =
   H.mkComponent
     { initialState
     , render
-    , eval: H.mkEval $ H.defaultEval { handleAction = handleAction, receive = \n → Just Render, handleQuery = handleQuery }
+    , eval: H.mkEval $ H.defaultEval { handleAction = handleAction,
+                                       receive = \v → Just $ HandleInput v,
+                                       handleQuery = handleQuery }
     }
 
 -- | Render the alert
 render ∷ ∀ m. State → H.ComponentHTML Action () m
-render state = maybeElem state.message $ message $ fromMaybe Info state.level
+render state = maybeElem state.message $ message $ fromMaybe A.Info state.level
 
 -- | Display the message
-message ∷ ∀ p i . AlertType → String → HH.HTML p i
+message ∷ ∀ p i . A.AlertType → String → HH.HTML p i
 message level msg = HH.div
             [css $ "alert " <> alertClass level, style "margin-top:20px"]
             [HH.text msg ]
 
 -- | Bootstrap alert message
-alertClass::AlertType→String
-alertClass Info = "alert-info"
-alertClass Warning = "alert-warning"
-alertClass Error = "alert-danger"
-alertClass Success = "alert-success"
+alertClass::A.AlertType→String
+alertClass A.Info = "alert-info"
+alertClass A.Warning = "alert-warning"
+alertClass A.Error = "alert-danger"
+alertClass A.Success = "alert-success"
 
 -- |
 -- | Handle the actions for this component:
@@ -78,8 +83,8 @@ handleAction ∷ ∀ o m .
 -- | Render => Remove the alert message if it has been rendered once, we only want it to stay for one
 -- |           rendering
 -- |
-handleAction Render = do
-  H.liftEffect $ log "Alert rendering"
+handleAction (HandleInput alert) = do
+  H.liftEffect $ log "Alert handle input"
   state <- H.get
   H.liftEffect $ log $ "Alert has displayed = " <> show state.displayed
   if state.displayed
