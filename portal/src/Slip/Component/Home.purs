@@ -7,7 +7,6 @@ module Slip.Component.Home where
 
 -- | Language imports
 import Prelude
-import Data.Maybe (fromMaybe, Maybe(..))
 
 -- | Halogen import
 import Halogen as H
@@ -15,7 +14,6 @@ import Halogen.HTML as HH
 
 -- | Our own stuff
 import Slip.Component.HTML.Utils (css, style)
-import Slip.Child (Query, Slot)
 
 -- | State for the component
 type State = { }

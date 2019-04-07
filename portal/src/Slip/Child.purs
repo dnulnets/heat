@@ -1,20 +1,26 @@
 -- |
--- | The common child query for all pages
+-- | The common child query, messages and slot for all pages
 -- |
 -- | Written by Tomas Stenlund, Sundsvall, Sweden (c) 2019
 -- |
 module Slip.Child (Query(..),
-                   Slot) where
+                   Slot,
+                   Message(..)) where
 
 -- | Language imports
-import Prelude
-import Data.Maybe (Maybe(..))
+import Data.Maybe (Maybe)
 
 -- | Halogen imports
 import Halogen as H
 
--- | Query algebra for all main components that we route to
+-- | Our imports
+import Slip.Data.Route (Page)
+
+-- | Messages possible to send out from all main components in the root page
+data Message = GotoPage Page
+
+-- | Query algebra for all main components in the root page
 data Query a = SetUser (Maybe String → a)
 
--- | Slot type for the all main components
-type Slot = H.Slot Query Void
+-- | Slot type for the all main components in the root page, they need to implement Query and Message
+type Slot = H.Slot Query Message

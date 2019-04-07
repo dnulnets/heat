@@ -3,7 +3,8 @@
 -- |
 -- | Written by Tomas Stenlund, Sundsvall, Sweden (c) 2019
 -- |
-module Slip.Root  where
+module Slip.Root (component,
+                  Query (..)) where
 
 -- | Language imports
 import Prelude
@@ -33,7 +34,8 @@ data Query a = GotoPage Page a
 
 -- | The actions supported by the root page
 data Action = SetUser |
-              MainMessage Login.Output
+              LoginMessage C.Message |
+              HomeMessage C.Message
 
 -- | The state for the application, it will contain the logged in user among other things
 type State = { user ∷ Maybe String,
@@ -69,7 +71,7 @@ initialState _ = { user: Nothing,
                    page: Home }
 
 -- | Render the root application, it contains a menu, alert data, main page view and a footer
-render ∷ ∀ a m . MonadAff m ⇒ State → H.ComponentHTML a ChildSlots m
+render ∷ ∀ m . MonadAff m ⇒ State → H.ComponentHTML Action ChildSlots m
 render state = HH.div
                [css "container"]
                [HH.slot _menu unit Menu.component unit absurd,
@@ -88,10 +90,10 @@ render state = HH.div
                ]
 
 -- | Render the main view of the page
-view ∷ ∀ a m. MonadAff m ⇒ Page → H.ComponentHTML a ChildSlots m
-view Login = HH.slot _main "login" Login.component unit absurd
-view Home = HH.slot _main "home" Home.component unit absurd
-view Error = HH.div
+view ∷ ∀ m. MonadAff m ⇒ Page → H.ComponentHTML Action ChildSlots m
+view Login = HH.slot _main "login" Login.component unit (Just <<< LoginMessage)
+view Home = HH.slot _main "home" Home.component unit (Just <<< HomeMessage)
+view _ = HH.div
              [css "container", style "margin-top:20px"]
              [HH.div
               [css "row"]
@@ -108,10 +110,10 @@ view Error = HH.div
              ]
 
 -- | Handle the route change from the browser
-handleQuery ∷ ∀ act r o m a .
+handleQuery ∷ ∀ r o m a .
               MonadAff m ⇒ 
               MonadAsk { userName :: String | r } m ⇒ 
-              Query a → H.HalogenM State act ChildSlots o m (Maybe a)
+              Query a → H.HalogenM State Action ChildSlots o m (Maybe a)
 handleQuery = case _ of
   GotoPage page a → do
     state ← H.get
@@ -131,7 +133,13 @@ handleAction SetUser =
     state <- H.get
     H.put $ state { user = Just name }
     
-handleAction (MainMessage (Login.GotoPage page)) =
+handleAction ( LoginMessage (C.GotoPage url)) =
   do
     H.liftEffect $ log "Go to a new page"
+    state <- H.get
+    H.put $ state { page = url }
+
+handleAction _ =
+  do
+    H.liftEffect $ log "Unhandled action"
     

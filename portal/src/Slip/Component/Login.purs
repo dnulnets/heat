@@ -18,6 +18,7 @@ import Halogen.HTML.Properties as HP
 import Halogen.HTML.Events as HE
 
 -- | Our own stuff
+import Slip.Child as C
 import Slip.Component.HTML.Utils (css, style)
 import Slip.Data.Route (Page(..))
 
@@ -30,17 +31,14 @@ initialState ∷ ∀ i. i → State
 initialState _ = { username : Nothing,
                    password : Nothing }
 
--- | Messages sent out from the component
-data Output = GotoPage Page
-
 -- | Internal form actions
 data Action = Submit
             | Input (State->State)
 
 -- | The component definition
-component ∷ ∀ q i o m .
+component ∷ ∀ q i m .
             MonadAff m ⇒
-            H.Component HH.HTML q i o m
+            H.Component HH.HTML q i C.Message m
 component =
   H.mkComponent
     { initialState
@@ -86,12 +84,13 @@ render state = HH.div
                 ]
                ]
 
-handleAction ∷ ∀ o m .
+handleAction ∷ ∀ m .
                MonadAff m ⇒
-               Action → H.HalogenM State Action () o m Unit
+               Action → H.HalogenM State Action () C.Message m Unit
 handleAction Submit = do
   state <- H.get
   H.liftEffect $ log $ "Submit" <> fromMaybe "<nothing>" state.username <> " " <> fromMaybe "<nothing>" state.password
+  H.raise (C.GotoPage Home)
 
 handleAction (Input f) = do
   H.liftEffect $ log $ "Setinput"
