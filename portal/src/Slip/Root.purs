@@ -139,6 +139,11 @@ handleAction ( LoginMessage (C.GotoPage url)) =
     state <- H.get
     H.put $ state { page = url }
 
+handleAction ( LoginMessage (C.Alert alrt msg)) =
+  do
+    H.liftEffect $ log "Alerting the user ..."
+    void $ H.query _alert unit (H.tell (Alert.Alert alrt msg))
+      
 handleAction _ =
   do
     H.liftEffect $ log "Unhandled action"

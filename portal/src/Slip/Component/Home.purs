@@ -31,7 +31,7 @@ component =
     , eval: H.mkEval $ H.defaultEval
     }
 
--- | Render the alert
+-- | Render the homepage
 render ∷ ∀ a m. State → H.ComponentHTML a () m
 render state = HH.div
                [css "container", style "margin-top:20px"]

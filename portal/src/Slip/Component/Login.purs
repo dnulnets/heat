@@ -21,6 +21,7 @@ import Halogen.HTML.Events as HE
 import Slip.Child as C
 import Slip.Component.HTML.Utils (css, style)
 import Slip.Data.Route (Page(..))
+import Slip.Data.Alert as A
 
 -- | State for the component
 type State = { username∷Maybe String,
@@ -43,7 +44,7 @@ component =
   H.mkComponent
     { initialState
     , render
-    , eval: H.mkEval $ H.defaultEval { handleAction = handleAction}
+    , eval: H.mkEval $ H.defaultEval { handleAction = handleAction }
     }
 
 -- | Render the alert
@@ -90,7 +91,8 @@ handleAction ∷ ∀ m .
 handleAction Submit = do
   state <- H.get
   H.liftEffect $ log $ "Submit" <> fromMaybe "<nothing>" state.username <> " " <> fromMaybe "<nothing>" state.password
-  H.raise (C.GotoPage Home)
+  H.raise (C.Alert A.Error "Unable to login, wrong username or password")  
+--  H.raise (C.GotoPage Home)
 
 handleAction (Input f) = do
   H.liftEffect $ log $ "Setinput"

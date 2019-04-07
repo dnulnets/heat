@@ -15,9 +15,11 @@ import Halogen as H
 
 -- | Our imports
 import Slip.Data.Route (Page)
+import Slip.Data.Alert (AlertType(..))
 
 -- | Messages possible to send out from all main components in the root page
-data Message = GotoPage Page
+data Message = GotoPage Page |
+               Alert AlertType String
 
 -- | Query algebra for all main components in the root page
 data Query a = SetUser (Maybe String → a)

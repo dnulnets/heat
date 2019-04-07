@@ -28,7 +28,3 @@ router = home <|>
   where
     home = Home <$ lit ""
     login = Login <$ lit "login"
-    
---    sessions = Sessions <$> (route "sessions" *> parseCRUD)
---    route str = lit "" *> lit str
---    parseCRUD = Show <$> num <|> pure Index
