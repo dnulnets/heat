@@ -18,10 +18,10 @@ import Halogen.HTML.Properties as HP
 import Halogen.HTML.Events as HE
 
 -- | Our own stuff
-import Slip.Child as C
+import Slip.Child as CH
 import Slip.Component.HTML.Utils (css, style)
 import Slip.Data.Route (Page(..))
-import Slip.Data.Alert as A
+import Slip.Data.Alert as AL
 
 -- | State for the component
 type State = { username∷Maybe String,
@@ -39,7 +39,7 @@ data Action = Submit
 -- | The component definition
 component ∷ ∀ q i m .
             MonadAff m ⇒
-            H.Component HH.HTML q i C.Message m
+            H.Component HH.HTML q i CH.Message m
 component =
   H.mkComponent
     { initialState
@@ -87,12 +87,12 @@ render state = HH.div
 
 handleAction ∷ ∀ m .
                MonadAff m ⇒
-               Action → H.HalogenM State Action () C.Message m Unit
+               Action → H.HalogenM State Action () CH.Message m Unit
 handleAction Submit = do
   state <- H.get
   H.liftEffect $ log $ "Submit" <> fromMaybe "<nothing>" state.username <> " " <> fromMaybe "<nothing>" state.password
-  H.raise (C.Alert A.Error "Unable to login, wrong username or password")  
---  H.raise (C.GotoPage Home)
+  H.raise (CH.Alert AL.Error "Unable to login, wrong username or password")  
+--  H.raise (CH.GotoPage Home)
 
 handleAction (Input f) = do
   H.liftEffect $ log $ "Setinput"

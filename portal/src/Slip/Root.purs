@@ -20,7 +20,7 @@ import Halogen as H
 import Halogen.HTML as HH
 
 -- | Slip imports
-import Slip.Child as C
+import Slip.Child as CH
 import Slip.Data.Route (Page(..))
 import Slip.Component.HTML.Utils (css, style)
 import Slip.Component.Menu as Menu
@@ -28,15 +28,14 @@ import Slip.Component.Alert as Alert
 import Slip.Component.Footer as Footer
 import Slip.Component.Login as Login
 import Slip.Component.Home as Home
-import Slip.Data.Alert as A
 
 -- | The querys supported by the root page
 data Query a = GotoPage Page a
 
 -- | The actions supported by the root page
 data Action = SetUser |
-              LoginMessage C.Message |
-              HomeMessage C.Message
+              LoginMessage CH.Message |
+              HomeMessage CH.Message
 
 -- | The state for the application, it will contain the logged in user among other things
 type State = { user ∷ Maybe String,
@@ -46,7 +45,7 @@ type State = { user ∷ Maybe String,
 type ChildSlots = ( menu ∷ Menu.Slot Unit,
                     alert ∷ Alert.Slot Unit,
                     footer ∷ Footer.Slot Unit,
-                    main ∷ C.Slot String)
+                    main ∷ CH.Slot String)
                   
 _menu = SProxy::SProxy "menu"
 _alert = SProxy::SProxy "alert"
@@ -134,13 +133,13 @@ handleAction SetUser =
     state <- H.get
     H.put $ state { user = Just name }
     
-handleAction ( LoginMessage (C.GotoPage url)) =
+handleAction ( LoginMessage (CH.GotoPage url)) =
   do
     H.liftEffect $ log "Go to a new page"
     state <- H.get
     H.put $ state { page = url }
 
-handleAction ( LoginMessage (C.Alert alrt msg)) =
+handleAction ( LoginMessage (CH.Alert alrt msg)) =
   do
     H.liftEffect $ log "Alerting the user ..."
     void $ H.query _alert unit (H.tell (Alert.Alert alrt msg))

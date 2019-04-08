@@ -12,4 +12,7 @@ import Prelude
 data AlertType = Info | Warning | Error | Success
 
 -- | An alert
+-- |
+-- | The type of the alert and the text message
+-- |
 data Alert = Alert AlertType String

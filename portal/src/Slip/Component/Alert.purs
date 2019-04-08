@@ -17,13 +17,13 @@ import Halogen.HTML as HH
 
 -- | Our own stuff
 import Slip.Component.HTML.Utils (css, style, maybeElem)
-import Slip.Data.Alert as A
+import Slip.Data.Alert as AL
 
 -- | Query algebra for the component
-data Query a = Alert A.AlertType String a
+data Query a = Alert AL.AlertType String a
 
 -- | Input to the component, is an alert or nothing
-type Input = Maybe A.Alert
+type Input = Maybe AL.Alert
 
 -- | Internal actions
 data Action = HandleInput Input
@@ -33,7 +33,7 @@ type Slot = H.Slot Query Void
 
 -- | State for the alert
 type State = { message ∷ Maybe String,
-               level ∷ Maybe A.AlertType,
+               level ∷ Maybe AL.AlertType,
                displayed ∷ Boolean }
 
 -- | Initial state is no logged in user
@@ -57,20 +57,20 @@ component =
 
 -- | Render the alert
 render ∷ ∀ m. State → H.ComponentHTML Action () m
-render state = maybeElem state.message $ message $ fromMaybe A.Info state.level
+render state = maybeElem state.message $ message $ fromMaybe AL.Info state.level
 
 -- | Display the message
-message ∷ ∀ p i . A.AlertType → String → HH.HTML p i
+message ∷ ∀ p i . AL.AlertType → String → HH.HTML p i
 message level msg = HH.div
             [css $ "alert " <> alertClass level, style "margin-top:20px"]
             [HH.text msg ]
 
 -- | Bootstrap alert message
-alertClass::A.AlertType→String
-alertClass A.Info = "alert-info"
-alertClass A.Warning = "alert-warning"
-alertClass A.Error = "alert-danger"
-alertClass A.Success = "alert-success"
+alertClass::AL.AlertType→String
+alertClass AL.Info = "alert-info"
+alertClass AL.Warning = "alert-warning"
+alertClass AL.Error = "alert-danger"
+alertClass AL.Success = "alert-success"
 
 -- |
 -- | Handle the actions for this component:
