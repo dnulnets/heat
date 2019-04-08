@@ -7,7 +7,7 @@ module Slip.Component.Alert where
 
 -- | Language imports
 import Prelude
-import Data.Maybe (fromMaybe, isJust, Maybe(..))
+import Data.Maybe (Maybe(..))
 import Effect.Aff.Class (class MonadAff)
 import Effect.Console (log)
 
@@ -29,13 +29,11 @@ data Action = HandleInput Input
 type Slot p = ∀ q . H.Slot q Void p
 
 -- | State for the alert
-type State = { alert ∷ Maybe AL.Alert,
-               displayed ∷ Boolean }
+type State = { alert ∷ Maybe AL.Alert }
 
 -- | Initial state is no logged in user
 initialState ∷ ∀ i. i → State
-initialState _ = { alert : Nothing,
-                   displayed : false }
+initialState _ = { alert : Nothing }
 
 -- | The component definition
 component ∷ ∀ q o m .
@@ -59,8 +57,8 @@ message (AL.Alert lvl msg) = HH.div
             [css $ "alert " <> alertClass lvl, style "margin-top:20px"]
             [HH.text msg ]
 
--- | Bootstrap alert message
-alertClass::AL.AlertType→String
+-- | Bootstrap alert message class
+alertClass ∷ AL.AlertType→String
 alertClass AL.Info = "alert-info"
 alertClass AL.Warning = "alert-warning"
 alertClass AL.Error = "alert-danger"
@@ -74,10 +72,9 @@ handleAction ∷ ∀ o m .
                Action → H.HalogenM State Action () o m Unit
 
 -- |
--- | Render => Remove the alert message if it has been rendered once, we only want it to stay for one
--- |           rendering
+-- | Render => The parent want us to render an alert message.
 -- |
 handleAction (HandleInput alert) = do
   H.liftEffect $ log "Alert handle input"
-  state <- H.get
+  state ← H.get
   H.put state { alert = alert }

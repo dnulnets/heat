@@ -18,10 +18,9 @@ import Halogen.HTML.Properties as HP
 import Halogen.HTML.Events as HE
 
 -- | Our own stuff
-import Slip.Child as CH
+import Slip.Child as Child
 import Slip.Component.HTML.Utils (css, style)
-import Slip.Data.Route (Page(..))
-import Slip.Data.Alert as AL
+import Slip.Data.Alert as DAL
 
 -- | State for the component
 type State = { username∷Maybe String,
@@ -34,12 +33,12 @@ initialState _ = { username : Nothing,
 
 -- | Internal form actions
 data Action = Submit
-            | Input (State->State)
+            | Input (State→State)
 
 -- | The component definition
 component ∷ ∀ q i m .
             MonadAff m ⇒
-            H.Component HH.HTML q i CH.Message m
+            H.Component HH.HTML q i Child.Message m
 component =
   H.mkComponent
     { initialState
@@ -85,16 +84,24 @@ render state = HH.div
                 ]
                ]
 
+-- | Handles all actions for the login component
 handleAction ∷ ∀ m .
                MonadAff m ⇒
-               Action → H.HalogenM State Action () CH.Message m Unit
+               Action → H.HalogenM State Action () Child.Message m Unit
+
+-- | Submit => Whenever the Login button is pressed, it will generate a submit message
 handleAction Submit = do
   state <- H.get
   H.liftEffect $ log $ "Submit" <> fromMaybe "<nothing>" state.username <> " " <> fromMaybe "<nothing>" state.password
-  H.raise (CH.Alert AL.Error "Unable to login, wrong username or password")  
---  H.raise (CH.GotoPage Home)
+  H.raise (Child.Alert DAL.Error "Unable to login, wrong username or password")  
 
+-- | Input f => Whenever the textbox entry is done, i.e. by leaving the box or pressing another control it generates a
+-- | Input f message, where f is the function that operatos on the state to save the new value.
 handleAction (Input f) = do
   H.liftEffect $ log $ "Setinput"
   state <- H.get
   H.put $ f state
+
+-- Scratch pad area
+--
+--  H.raise (Child.GotoPage Home)

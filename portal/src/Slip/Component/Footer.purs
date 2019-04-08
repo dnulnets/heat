@@ -7,20 +7,16 @@ module Slip.Component.Footer where
 
 -- | Language imports
 import Prelude
-import Data.Maybe (fromMaybe, Maybe(..))
 
 -- | Halogen import
 import Halogen as H
 import Halogen.HTML as HH
 
 -- | Our own stuff
-import Slip.Component.HTML.Utils (css, style)
-
--- | Query algebra for the component
-data Query a = Dummy (Void → a)
+import Slip.Component.HTML.Utils (css)
 
 -- | Slot type for the componet
-type Slot = H.Slot Query Void
+type Slot p = ∀ q . H.Slot q Void p
 
 -- | State for the component
 type State = { }

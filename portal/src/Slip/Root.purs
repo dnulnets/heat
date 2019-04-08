@@ -20,9 +20,9 @@ import Halogen as H
 import Halogen.HTML as HH
 
 -- | Slip imports
-import Slip.Child as CH
+import Slip.Child as Child
 import Slip.Data.Route (Page(..))
-import Slip.Data.Alert as AL
+import Slip.Data.Alert as DAL
 import Slip.Component.HTML.Utils (css, style)
 import Slip.Component.Menu as Menu
 import Slip.Component.Alert as Alert
@@ -35,19 +35,19 @@ data Query a = GotoPage Page a
 
 -- | The actions supported by the root page
 data Action = SetUser |
-              LoginMessage CH.Message |
-              HomeMessage CH.Message
+              LoginMessage Child.Message |
+              HomeMessage Child.Message
 
 -- | The state for the application, it will contain the logged in user among other things
 type State = { user ∷ Maybe String,
                page ∷ Page,
-               alert ∷ Maybe AL.Alert }
+               alert ∷ Maybe DAL.Alert }
 
 -- | The set of slots for the root container
 type ChildSlots = ( menu ∷ Menu.Slot Unit,
                     alert ∷ Alert.Slot Unit,
                     footer ∷ Footer.Slot Unit,
-                    main ∷ CH.Slot String)
+                    main ∷ Child.Slot String)
                   
 _menu = SProxy::SProxy "menu"
 _alert = SProxy::SProxy "alert"
@@ -112,7 +112,7 @@ view _ = HH.div
               ]
              ]
 
--- | Handle the route change from the browser
+-- | Handle the queries sent to the root page
 handleQuery ∷ ∀ r o m a .
               MonadAff m ⇒ 
               MonadAsk { userName :: String | r } m ⇒ 
@@ -123,37 +123,45 @@ handleQuery = case _ of
     H.put $ state { page = page, alert = Nothing }
     pure (Just a)
 
--- | Just a placeholder for how to write a handler for actions
+-- | Handle the actions within the root page
 handleAction ∷ ∀ r o m .
                 MonadAff m ⇒
                 MonadAsk { userName :: String | r } m ⇒
                 Action → H.HalogenM State Action ChildSlots o m Unit
 
+-- | Sets the user that has logged in
 handleAction SetUser =
   do
-    H.liftEffect $ log "Hejsan"
     name <- lift $ asks _.userName
     state <- H.get
     H.put $ state { user = Just name }
-    
-handleAction ( LoginMessage (CH.GotoPage url)) =
+
+-- | Handles messages sent out from the Login view
+-- |
+-- | GotoPage url => Routes the root pages view to the new url
+handleAction ( LoginMessage (Child.GotoPage url)) =
   do
     H.liftEffect $ log "Go to a new page"
     state <- H.get
     H.put $ state { page = url, alert = Nothing }
 
-handleAction ( LoginMessage (CH.Alert alrt msg)) =
+-- | Handles messages sent out from the Login view
+-- |
+-- | Alert level message  => Sets the alert message and level for the root page, to be renderd by the
+-- | alert view.
+handleAction ( LoginMessage (Child.Alert alrt msg)) =
   do
     H.liftEffect $ log "Alerting the user ..."
     state <- H.get
-    H.put $ state { alert = Just $ AL.Alert alrt msg }
-      
+    H.put $ state { alert = Just $ DAL.Alert alrt msg }
+
+-- | Handles messages sent out from the Login view
+-- |
+-- | Catch all action
 handleAction _ =
   do
     H.liftEffect $ log "Unhandled action"
     
-
-
 --
 -- Scratch area
 --

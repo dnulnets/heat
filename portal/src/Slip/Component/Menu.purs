@@ -21,11 +21,8 @@ import DOM.HTML.Indexed.ButtonType (ButtonType(..))
 -- | Our own stuff
 import Slip.Component.HTML.Utils (css, prop)
 
--- | Quer yalgebra for the component
-data Query a = Dummy (Void → a)
-
 -- | Slot type for the menu
-type Slot = H.Slot Query Void
+type Slot p = ∀ q . H.Slot q Void p
 
 -- | State for the meny, we have a user so far
 type State = { user ∷ Maybe String }

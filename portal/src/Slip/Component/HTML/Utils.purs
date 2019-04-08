@@ -1,7 +1,5 @@
 -- |
--- | The root page for the entire application.
--- |
--- | Written by Tomas Stenlund, Sundsvall, Sweden (c) 2019
+-- | The HTML Utilities module
 -- |
 module Slip.Component.HTML.Utils where
 
@@ -26,14 +24,11 @@ style = HP.prop (PropName "style")
 prop :: forall r i. String -> String -> HP.IProp r i
 prop name = HP.attr (AttrName name)
 
--- | Sometimes we need to deal with elements which may or may not exist. This function lets us
--- | provide rendering for the element if it exists, and renders an empty node otherwise.
+-- | Render a fragment if the the value exists (Just), empty if not (Nothing)
 maybeElem :: forall p i a. Maybe a -> (a -> HH.HTML p i) -> HH.HTML p i
 maybeElem (Just x) f = f x
 maybeElem _ _ = HH.text ""
 
--- | PureScript is a strict language. If we want to conditionally display an element, then we
--- | should hide the evaluation behind a function, which won't be evaluated right away, in order
--- | to minimize the work performed each render.
+-- | Render a fragment if the value is true, empty if not
 whenElem :: forall p i. Boolean -> (Unit -> HH.HTML p i) -> HH.HTML p i
 whenElem cond f = if cond then f unit else HH.text ""
