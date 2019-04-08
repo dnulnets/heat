@@ -22,6 +22,7 @@ import Halogen.HTML as HH
 -- | Slip imports
 import Slip.Child as CH
 import Slip.Data.Route (Page(..))
+import Slip.Data.Alert as AL
 import Slip.Component.HTML.Utils (css, style)
 import Slip.Component.Menu as Menu
 import Slip.Component.Alert as Alert
@@ -39,7 +40,8 @@ data Action = SetUser |
 
 -- | The state for the application, it will contain the logged in user among other things
 type State = { user ∷ Maybe String,
-               page ∷ Page}
+               page ∷ Page,
+               alert ∷ Maybe AL.Alert }
 
 -- | The set of slots for the root container
 type ChildSlots = ( menu ∷ Menu.Slot Unit,
@@ -68,7 +70,8 @@ component =
 -- | Initial state, for instance a not logged in user
 initialState ∷ ∀ i. i → State
 initialState _ = { user: Nothing,
-                   page: Home }
+                   page: Home,
+                   alert: Nothing }
 
 -- | Render the root application, it contains a menu, alert data, main page view and a footer
 render ∷ ∀ m . MonadAff m ⇒ State → H.ComponentHTML Action ChildSlots m
@@ -79,7 +82,7 @@ render state = HH.div
                 [css "row"]
                 [HH.div
                  [css "col-md-12"]
-                 [HH.slot _alert unit Alert.component Nothing absurd]
+                 [HH.slot _alert unit Alert.component state.alert absurd]
                 ],
                 HH.main
                 [ ]
@@ -117,7 +120,7 @@ handleQuery ∷ ∀ r o m a .
 handleQuery = case _ of
   GotoPage page a → do
     state ← H.get
-    H.put $ state { page = page }
+    H.put $ state { page = page, alert = Nothing }
     pure (Just a)
 
 -- | Just a placeholder for how to write a handler for actions
@@ -137,14 +140,22 @@ handleAction ( LoginMessage (CH.GotoPage url)) =
   do
     H.liftEffect $ log "Go to a new page"
     state <- H.get
-    H.put $ state { page = url }
+    H.put $ state { page = url, alert = Nothing }
 
 handleAction ( LoginMessage (CH.Alert alrt msg)) =
   do
     H.liftEffect $ log "Alerting the user ..."
-    void $ H.query _alert unit (H.tell (Alert.Alert alrt msg))
+    state <- H.get
+    H.put $ state { alert = Just $ AL.Alert alrt msg }
       
 handleAction _ =
   do
     H.liftEffect $ log "Unhandled action"
     
+
+
+--
+-- Scratch area
+--
+-- How to send a request
+-- void $ H.query _alert unit (H.tell (Alert.Alert alrt msg))

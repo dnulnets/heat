@@ -19,50 +19,44 @@ import Halogen.HTML as HH
 import Slip.Component.HTML.Utils (css, style, maybeElem)
 import Slip.Data.Alert as AL
 
--- | Query algebra for the component
-data Query a = Alert AL.AlertType String a
-
 -- | Input to the component, is an alert or nothing
 type Input = Maybe AL.Alert
 
 -- | Internal actions
 data Action = HandleInput Input
 
--- | Slot type for the alert
-type Slot = H.Slot Query Void
+-- | Slot type for the alert, we do not have any Query therefore it looks like this
+type Slot p = ∀ q . H.Slot q Void p
 
 -- | State for the alert
-type State = { message ∷ Maybe String,
-               level ∷ Maybe AL.AlertType,
+type State = { alert ∷ Maybe AL.Alert,
                displayed ∷ Boolean }
 
 -- | Initial state is no logged in user
 initialState ∷ ∀ i. i → State
-initialState _ = { message : Nothing,
-                   level : Nothing,
+initialState _ = { alert : Nothing,
                    displayed : false }
 
 -- | The component definition
-component ∷ ∀ o m .
+component ∷ ∀ q o m .
             MonadAff m ⇒
-            H.Component HH.HTML Query Input o m
+            H.Component HH.HTML q Input o m
 component =
   H.mkComponent
     { initialState
     , render
     , eval: H.mkEval $ H.defaultEval { handleAction = handleAction,
-                                       receive = \v → Just $ HandleInput v,
-                                       handleQuery = handleQuery }
+                                       receive = \v → Just $ HandleInput v }
     }
 
 -- | Render the alert
 render ∷ ∀ m. State → H.ComponentHTML Action () m
-render state = maybeElem state.message $ message $ fromMaybe AL.Info state.level
+render state = maybeElem state.alert message
 
 -- | Display the message
-message ∷ ∀ p i . AL.AlertType → String → HH.HTML p i
-message level msg = HH.div
-            [css $ "alert " <> alertClass level, style "margin-top:20px"]
+message ∷ ∀ p i . AL.Alert → HH.HTML p i
+message (AL.Alert lvl msg) = HH.div
+            [css $ "alert " <> alertClass lvl, style "margin-top:20px"]
             [HH.text msg ]
 
 -- | Bootstrap alert message
@@ -86,25 +80,4 @@ handleAction ∷ ∀ o m .
 handleAction (HandleInput alert) = do
   H.liftEffect $ log "Alert handle input"
   state <- H.get
-  H.liftEffect $ log $ "Alert has displayed = " <> show state.displayed
-  if state.displayed
-    then
-      H.put state { message = Nothing, displayed = false }
-    else
-      H.put state { displayed = isJust state.message }
-
--- |
--- | Handle the Queries for this component
--- |
-handleQuery ∷ ∀ o m a .
-              MonadAff m ⇒
-              Query a → H.HalogenM State Action () o m (Maybe a)
-
--- |
--- | Alert AlertType String => Set the message that is to be render to the user
--- |
-handleQuery (Alert alrt msg a) = do
-    state <- H.get
-    H.liftEffect $ log $ msg
-    H.put state {message = Just msg, level = Just alrt, displayed = false}
-    pure (Just a)
+  H.put state { alert = alert }
