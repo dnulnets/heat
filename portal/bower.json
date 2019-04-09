@@ -12,7 +12,8 @@
     "purescript-effect": "^2.0.1",
     "purescript-halogen": "#5.0.0-rc.4",
     "purescript-routing": "^9.0.0",
-    "purescript-aff-coroutines": "^7.0.0"
+    "purescript-aff-coroutines": "^7.0.0",
+    "purescript-affjax": "^9.0.0"
   },
   "devDependencies": {
     "purescript-psci-support": "^4.0.0"
