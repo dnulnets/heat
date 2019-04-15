@@ -31,7 +31,10 @@ mkYesod "App" [parseRoutes|
 instance Yesod App
 
 postApiR :: Handler ()
-postApiR = notFound
+postApiR = do
+    body <- runRequestBody
+    liftIO $ print $ show $ fst body
+    notFound
 
 getAuthenticateR :: Handler TypedContent
 getAuthenticateR = selectRep $ do
