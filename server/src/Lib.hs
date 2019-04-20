@@ -9,6 +9,7 @@ module Lib
 
 import           Data.Text (Text)
 import           Yesod
+import           Network.HTTP.Types ( status400 )
 
 data Person = Person
     { name :: Text
@@ -28,19 +29,28 @@ mkYesod "App" [parseRoutes|
 /api ApiR POST
 |]
 
-instance Yesod App
-
-postApiR :: Handler ()
+instance Yesod App where
+    makeSessionBackend _ = return Nothing
+    
+postApiR :: Handler TypedContent
 postApiR = do
-    body <- runRequestBody
-    liftIO $ print $ show $ fst body
-    notFound
+  bdy <- waiRequest
+  liftIO $ print $ show $ bdy
+  addHeader "myheader" "headerdata"
+  selectRep $ do
+    provideJson $ Person "Michael" 28
+  sendResponseStatus status400 ("DELETED" :: Text)
 
 getAuthenticateR :: Handler TypedContent
 getAuthenticateR = selectRep $ do
-    provideJson person
-  where
-    person@Person {..} = Person "Michael" 28
-
+  provideJson person
+    where
+      person@Person {..} = Person "Michael" 28
+      
 someFunc :: IO ()
 someFunc = warp 3000 App
+
+    -- body <- runRequestBody
+    -- liftIO $ print $ show $ fst body
+    -- bdy <- _ lift $ waiRequest
+    -- $ show $ bdy
