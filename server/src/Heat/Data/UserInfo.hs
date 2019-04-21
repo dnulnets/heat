@@ -1,34 +1,28 @@
 {-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE QuasiQuotes       #-}
-{-# LANGUAGE RecordWildCards   #-}
-{-# LANGUAGE TemplateHaskell   #-}
-{-# LANGUAGE TypeFamilies      #-}
-{-# LANGUAGE ExplicitForAll        #-}
-{-# LANGUAGE FlexibleContexts      #-}
-{-# LANGUAGE MultiParamTypeClasses #-}
-{-# LANGUAGE RankNTypes            #-}
-{-# LANGUAGE ViewPatterns #-}
 {-# LANGUAGE DeriveGeneric #-}
 
+-- |
+-- Module      : Heat.Data.UserInfo
+-- Description : The user information stored in a JSON Web Token
+-- Copyright   : (c) Tomas Stenlund, 2019
+-- License     : BSD-3
+-- Maintainer  : tomas.stenlund@telia.com
+-- Stability   : experimental
+-- Portability : POSIX
+--
+-- This module contains the user information that is stored in a JSON Web Token
 module Heat.Data.UserInfo (UserInfo(..)) where
 
+--
+-- External imports
+--
 import GHC.Generics
-
 import Data.Text (Text)
-import Yesod
-import Yesod.Auth
-import Yesod.Auth.Message as AuthMsg
-import Network.HTTP.Types ( status400, status401 )
-import Network.Wai (requestHeaders)
-import Data.Map as Map (fromList, (!?))
-import Data.Aeson (fromJSON, Result(..))
+import Data.Aeson (ToJSON, FromJSON)
 
---
--- The user info object that is used by the JSON Web Token
---
-data UserInfo = UserInfo
-  {
-    userid :: Text
+-- |User information that is used in the JSON Web Token
+data UserInfo = UserInfo {
+  userid :: Text -- ^A user identity
   } deriving (Generic, Show)
 
 instance ToJSON UserInfo

@@ -1,6 +1,15 @@
 {-# LANGUAGE OverloadedStrings #-}
 
--- | This module contains functions to create and verify JSON Web Tokens
+-- |
+-- Module      : Heat.Utils.JWT
+-- Description : JSON Web Token functions
+-- Copyright   : (c) Tomas Stenlund, 2019
+-- License     : BSD-3
+-- Maintainer  : tomas.stenlund@telia.com
+-- Stability   : experimental
+-- Portability : POSIX
+-- 
+-- This module contains functions to create and verify JSON Web Token
 -- and to extract and insert the unregistered claim as a JSON structure
 -- where you can store relevant information for your application
 module Heat.Utils.JWT (jsonToToken,

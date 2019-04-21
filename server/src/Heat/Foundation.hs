@@ -1,37 +1,38 @@
 {-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE QuasiQuotes       #-}
-{-# LANGUAGE RecordWildCards   #-}
 {-# LANGUAGE TemplateHaskell   #-}
 {-# LANGUAGE TypeFamilies      #-}
-{-# LANGUAGE ExplicitForAll        #-}
-{-# LANGUAGE FlexibleContexts      #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
-{-# LANGUAGE RankNTypes            #-}
-{-# LANGUAGE ViewPatterns #-}
-{-# LANGUAGE DeriveGeneric #-}
 
+-- |
+-- Module      : Heat.Foundation
+-- Description : The yesod application definition
+-- Copyright   : (c) Tomas Stenlund, 2019
+-- License     : BSD-3
+-- Maintainer  : tomas.stenlund@telia.com
+-- Stability   : experimental
+-- Portability : POSIX
+-- 
+-- This module contains the yesod application definition
 module Heat.Foundation where
 
-import GHC.Generics
-
+--
+-- External imports
+--
 import Data.Text (Text)
 import Yesod
 import Yesod.Auth
-import Yesod.Auth.Message as AuthMsg
-import Network.HTTP.Types ( status400, status401 )
-import Network.Wai (requestHeaders)
-import Data.Map as Map (fromList, (!?))
-import Data.Aeson (fromJSON, Result(..))
-
+import Data.Aeson (fromJSON,
+                   Result(..))
+--
+-- Heat imports
+--
 import Heat.Settings
 import Heat.Utils.JWT
 import Heat.Data.UserInfo
 
---
--- Our application type
---
+-- |Our application type
 data App = App {
-  settings :: AppSettings
+  settings :: AppSettings -- ^The application settings
   }
 
 --
@@ -39,45 +40,33 @@ data App = App {
 --
 mkYesodData "App" $(parseRoutesFile "config/routes")
 
---
--- Yesod interface
---
+-- |Our application is a Yesod application
 instance Yesod App where
 
-  --
-  -- No cookies
-  --
+  -- |We do not want any cookies or session data
   makeSessionBackend _ = return Nothing
   
-  --
-  -- Check the authorization of the API
-  --
+  -- |Authroization checks for our routes
   isAuthorized AuthenticateR _ = return Authorized
---  isAuthorized ApiR _ = return $ Unauthorized "You must login to access this page"
   isAuthorized ApiR _ = return Authorized
     
 --
 -- Authorization interface
 --
+-- |Our application is a YesodAuth application
 instance YesodAuth App where
 
-  --
-  -- The Authenticated id
-  --
+  -- |Our authentication id
   type AuthId App = Text
 
-  --
-  -- We are only servicing a REST JSON API, no other so theese are not needed
-  -- but required by the haskell api
-  --
+  -- We are only publishing a REST JSON API, this is not needed but required
+  -- by the Yesod API, implemented as error or empty
   loginDest _ = error ""
   logoutDest _ = error ""
   authPlugins _ = []
   authenticate _ = error ""
 
-  --
-  -- Returns with the current authenticated id if there is one
-  --
+  -- |Check the JSON Web token and return with the user identity if it is valid
   maybeAuthId = do
     bearer <- lookupBearerAuth
     secret <- jwtSecret . settings <$> getYesod

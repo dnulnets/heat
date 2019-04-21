@@ -1,55 +1,53 @@
 {-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE QuasiQuotes       #-}
-{-# LANGUAGE RecordWildCards   #-}
-{-# LANGUAGE TemplateHaskell   #-}
-{-# LANGUAGE TypeFamilies      #-}
-{-# LANGUAGE ExplicitForAll        #-}
-{-# LANGUAGE FlexibleContexts      #-}
-{-# LANGUAGE MultiParamTypeClasses #-}
-{-# LANGUAGE RankNTypes            #-}
-{-# LANGUAGE ViewPatterns #-}
 {-# LANGUAGE DeriveGeneric #-}
 
-module Heat.Authenticate (jsonToToken,
-                          tokenToJson,
-                          postAuthenticateR) where
+-- |
+-- Module      : Heat.Authenticate
+-- Description : The authenticate route
+-- Copyright   : (c) Tomas Stenlund, 2019
+-- License     : BSD-3
+-- Maintainer  : tomas.stenlund@telia.com
+-- Stability   : experimental
+-- Portability : POSIX
+-- 
+-- This module contains the authenticate route for the application
+module Heat.Authenticate (postAuthenticateR) where
 
 import GHC.Generics
 
+--
+-- External imports
+--
 import Data.Text (Text)
 import Yesod
-import Yesod.Auth
-import Yesod.Auth.Message as AuthMsg
-import Network.HTTP.Types ( status400, status401 )
-import Network.Wai (requestHeaders)
-import Data.Map as Map (fromList, (!?))
-import Data.Aeson (fromJSON, Result(..))
 
+--
+-- Heat imports
+--
 import Heat.Settings
 import Heat.Foundation
 import Heat.Utils.JWT
 import Heat.Data.UserInfo
 
---
--- Authenticate object for the authenticate api
---
+-- |Authenticate body description
 data Authenticate = Authenticate
-  { username :: Text,
-    password  :: Text
+  { username :: Text  -- ^The username of the user
+  , password  :: Text -- ^The password to authenticate the user with
   } deriving (Generic, Show)
 
 instance ToJSON Authenticate
 instance FromJSON Authenticate
 
+-- |The JSON Web token returned after authentication
 data Token = Token
-  { token :: Text
+  { token :: Text -- ^The JSON Web token
   } deriving (Generic, Show)
 
 instance ToJSON Token
 instance FromJSON Token
 
--- | Authenticate the user and create a JSON Web Token that is returned so it can be used
--- | for following calls
+-- |Authenticate the user and create a JSON Web Token that is returned so it can be used
+-- for following calls
 postAuthenticateR :: Handler TypedContent
 postAuthenticateR = do
   foo <- requireCheckJsonBody :: Handler Authenticate
