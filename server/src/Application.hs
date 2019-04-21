@@ -12,7 +12,7 @@
 -- 
 -- This module contains the main entry point and initialization of the
 -- application.
-module Application where
+module Application (appMain) where
 
 --
 -- External imports
@@ -22,9 +22,13 @@ import Yesod
 --
 -- Internal imports
 --
-import Heat.Settings
-import Heat.Foundation
-import Heat.Authenticate
+import Heat.Settings (defaultSettings)
+import Heat.Foundation (App(..),
+                        Route(..),                        
+                        resourcesApp,                        
+                        getApiR)
+       
+import Heat.Authenticate (postAuthenticateR)
 
 --
 -- The dispatcher

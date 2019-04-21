@@ -13,7 +13,11 @@
 -- Portability : POSIX
 -- 
 -- This module contains the yesod application definition
-module Heat.Foundation where
+module Heat.Foundation (Handler,
+                        App(..),
+                        resourcesApp,
+                        Route (..),
+                        getApiR) where
 
 --
 -- External imports
@@ -26,9 +30,9 @@ import Data.Aeson (fromJSON,
 --
 -- Heat imports
 --
-import Heat.Settings
-import Heat.Utils.JWT
-import Heat.Data.UserInfo
+import Heat.Settings (AppSettings(..))
+import Heat.Utils.JWT (tokenToJson)
+import Heat.Data.UserInfo (UserInfo(..))
 
 -- |Our application type
 data App = App {

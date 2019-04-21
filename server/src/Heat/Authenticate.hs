@@ -24,27 +24,25 @@ import Yesod
 --
 -- Heat imports
 --
-import Heat.Settings
-import Heat.Foundation
-import Heat.Utils.JWT
-import Heat.Data.UserInfo
+import Heat.Settings (jwtSecret)
+import Heat.Foundation (settings, Handler)
+import Heat.Utils.JWT (jsonToToken)
+import Heat.Data.UserInfo (UserInfo (..))
 
--- |Authenticate body description
+-- |Authenticate body description, comes with the POST
 data Authenticate = Authenticate
   { username :: Text  -- ^The username of the user
   , password  :: Text -- ^The password to authenticate the user with
   } deriving (Generic, Show)
 
-instance ToJSON Authenticate
 instance FromJSON Authenticate
 
--- |The JSON Web token returned after authentication
+-- |The JSON Web token returned after authentication, response to the POST
 data Token = Token
   { token :: Text -- ^The JSON Web token
   } deriving (Generic, Show)
 
 instance ToJSON Token
-instance FromJSON Token
 
 -- |Authenticate the user and create a JSON Web Token that is returned so it can be used
 -- for following calls
