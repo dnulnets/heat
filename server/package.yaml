@@ -23,7 +23,12 @@ dependencies:
 - base >= 4.7 && < 5
 - text
 - yesod
+- yesod-auth
 - http-types
+- wai
+- containers
+- jwt
+- aeson
 
 library:
   source-dirs: src
