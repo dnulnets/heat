@@ -57,13 +57,13 @@ instance ToJSON Token
 postAuthenticateR :: Handler Value
 postAuthenticateR = do
   auth <- requireCheckJsonBody :: Handler Authenticate
-  app <- getYesod
-  seconds <- liftIO $ systemSeconds <$> getSystemTime
-  secret <- tokenSecret . appSettings <$> getYesod
-  length <- tokenExpiration . appSettings <$> getYesod
   dbuser <- runDB $ getBy $ UniqueUserUsername $ username auth
-  case dbuser of
-    Just (Entity userId user) | authValidatePassword (userPassword user) (password auth) -> do
-      token <- return $ jsonToToken secret (fromIntegral seconds) length $ toJSON userId
-      returnJson $ Token token
-    _ -> notAuthenticated
+  seconds <- liftIO $ fromIntegral . systemSeconds <$> getSystemTime
+  appset <- appSettings <$> getYesod
+  let secret = tokenSecret appset
+      length = tokenExpiration appset
+    in case dbuser of
+         Just (Entity userId user) | authValidatePassword (userPassword user) (password auth) -> do
+                                       token <- return $ jsonToToken secret seconds length $ toJSON userId
+                                       returnJson $ Token token
+         _ -> notAuthenticated
