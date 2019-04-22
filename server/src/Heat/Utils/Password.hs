@@ -28,9 +28,9 @@ authValidatePassword::Text -- ^The hashed password
 authValidatePassword hpwd upwd = validatePassword (encodeUtf8 upwd) (encodeUtf8 hpwd) 
 
 -- |Hashes a password.
-authHashPassword :: Int           -- ^The cost of the hashing work
+authHashPassword :: Integer       -- ^The cost of the hashing work
                  -> Text          -- ^The user supplied password in clear text
                  ->IO ByteString  -- ^The hashed password
 authHashPassword cost pwd = do
-  result <- hashPassword cost (encodeUtf8 pwd) :: IO ByteString
+  result <- hashPassword (fromIntegral cost) (encodeUtf8 pwd) :: IO ByteString
   return result

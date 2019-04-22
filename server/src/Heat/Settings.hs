@@ -28,7 +28,6 @@ data AppSettings = AppSettings {
   
   , databaseConf :: PostgresConf -- ^The database configuration
 
-  , passwordSecret :: Text       -- ^The secret for the bcrypt password hash generation
   , passwordCost:: Integer       -- ^The cost for the bcrypt password hash generation
   
   }
@@ -38,6 +37,5 @@ defaultSettings = AppSettings {
   tokenSecret = "mandelmassa",
   tokenExpiration = 24*60*60,
   databaseConf = PostgresConf "postgresql://heatserver:heatserver@localhost/heat" 5,
-  passwordSecret = "mandelmassa",
-  passwordCost = 4
+  passwordCost = 10
   }

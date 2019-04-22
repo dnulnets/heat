@@ -60,6 +60,7 @@ instance Yesod App where
   
   -- |Authroization checks for our routes
   isAuthorized AuthenticateR _ = return Authorized
+  isAuthorized UserR _ = return Authorized
   isAuthorized ApiR _ = return Authorized
     
 --
@@ -81,17 +82,17 @@ instance YesodAuth App where
   -- |Check the JSON Web token and return with the user identity if it is valid
   maybeAuthId = do
     bearer <- lookupBearerAuth
-    seconds <- liftIO $ systemSeconds <$> getSystemTime    
+    seconds <- liftIO $ fromIntegral . systemSeconds <$> getSystemTime    
     secret <- tokenSecret . appSettings <$> getYesod
     return $ case bearer of
       Nothing -> Nothing
       Just token ->
-        case tokenToJson secret (fromIntegral seconds) token of
+        case tokenToJson secret seconds token of
           Nothing -> Nothing
-          Just userinfo ->
-            case fromJSON userinfo of
+          Just info ->
+            case fromJSON info of
               Error _ -> Nothing
-              Success info -> Just $ info
+              Success uid -> Just $ uid
 
 -- How to run database actions.
 instance YesodPersist App where
@@ -117,8 +118,6 @@ getApiR = do
   u <- requireAuth
   liftIO $ print $ case u of
     Entity _ e -> show e
-    otherwise -> "Nothing"
   addHeader "myheader" "headerdata"
   selectRep $ do
     provideJson $ UserInfo 1
-    

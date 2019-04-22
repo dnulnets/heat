@@ -33,14 +33,18 @@ import System.Log.FastLogger (defaultBufSize,
 --
 -- Internal imports
 --
+import Heat.Model (migrateAll)
 import Heat.Settings (defaultSettings, AppSettings(..))
 import Heat.Foundation (App(..),
                         Route(..),                        
                         resourcesApp,                        
                         getApiR)
-       
+
+--
+-- Our routes
+--
 import Heat.Authenticate (postAuthenticateR)
-import Heat.Model (migrateAll)
+import Heat.Handler.User (putUserR)
 
 --
 -- The dispatcher

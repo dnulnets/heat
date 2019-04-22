@@ -1,3 +1,4 @@
 /api ApiR GET
+/user UserR PUT
 /authenticate AuthenticateR POST
 
