@@ -19,13 +19,23 @@ import GHC.Generics
 -- External imports
 --
 import Data.Text (Text)
-import Yesod
+import Data.Text.Encoding (encodeUtf8, decodeUtf8)
+import Data.ByteString (ByteString)
+import qualified Data.ByteString.Char8 as B
+import Data.Time.Clock.System (getSystemTime,
+                               SystemTime(..))
+import Crypto.KDF.BCrypt (hashPassword,validatePassword)
 
+--
+-- Internal imports
+--
+import Yesod
+import Heat.Model
 --
 -- Heat imports
 --
-import Heat.Settings (jwtSecret)
-import Heat.Foundation (settings, Handler)
+import Heat.Settings (AppSettings(..))
+import Heat.Foundation (appSettings, Handler)
 import Heat.Utils.JWT (jsonToToken)
 import Heat.Data.UserInfo (UserInfo (..))
 
@@ -46,10 +56,27 @@ instance ToJSON Token
 
 -- |Authenticate the user and create a JSON Web Token that is returned so it can be used
 -- for following calls
-postAuthenticateR :: Handler TypedContent
+postAuthenticateR :: Handler Value
 postAuthenticateR = do
-  foo <- requireCheckJsonBody :: Handler Authenticate
-  secret <- jwtSecret . settings <$> getYesod
-  token <- return $ jsonToToken secret $ toJSON $ UserInfo "67565-63258"
-  selectRep $ do
-    provideJson $ Token token
+  auth <- requireCheckJsonBody :: Handler Authenticate
+  hsh <- liftIO $ hash "mandelmassa"
+  liftIO $ print $ hsh
+  seconds <- liftIO $ systemSeconds <$> getSystemTime
+  secret <- tokenSecret . appSettings <$> getYesod
+  length <- tokenExpiration . appSettings <$> getYesod
+  dbuser <- runDB $ getBy $ UniqueUserUsername $ username auth
+  case dbuser of
+    Just (Entity userId user) | validPassword (userPassword user) (password auth) -> do
+      token <- return $ jsonToToken secret (fromIntegral seconds) length $ toJSON userId
+      returnJson $ Token token
+    _ -> notAuthenticated
+
+
+validPassword::Text->Text->Bool
+validPassword uid pwd = validatePassword (encodeUtf8 pwd) (B.pack "$2b$12$4G0n1i213IFmAs9IzKb6MOfvIDMu39f.MRX9PeZr4nJ48ccPSTBUq") 
+
+hash :: Text->IO ByteString
+hash pwd = do
+  result <- hashPassword 12 (encodeUtf8 pwd) :: IO B.ByteString
+  return result
+  

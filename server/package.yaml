@@ -29,6 +29,16 @@ dependencies:
 - containers
 - jwt
 - aeson
+- time
+- persistent
+- persistent-template
+- persistent-postgresql
+- yesod-core
+- http-conduit
+- fast-logger
+- monad-logger
+- bytestring
+- cryptonite
 
 library:
   source-dirs: src

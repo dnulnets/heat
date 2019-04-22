@@ -1,5 +1,6 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE TemplateHaskell   #-}
+{-# LANGUAGE RecordWildCards #-}
 
 -- |
 -- Module      : Application
@@ -17,24 +18,54 @@ module Application (appMain) where
 --
 -- External imports
 --
-import Yesod
+import Control.Monad.Logger (runLoggingT)
 
+import Database.Persist.Sql (runSqlPool, runMigration)
+import Database.Persist.Postgresql (createPostgresqlPool, PostgresConf(..))
+
+import Yesod
+import Yesod.Default.Config2 (makeYesodLogger)
+import Network.HTTP.Client.Conduit (Manager, newManager)
+
+import System.Log.FastLogger (defaultBufSize,
+                              newStdoutLoggerSet,
+                              toLogStr)
 --
 -- Internal imports
 --
-import Heat.Settings (defaultSettings)
+import Heat.Settings (defaultSettings, AppSettings(..))
 import Heat.Foundation (App(..),
                         Route(..),                        
                         resourcesApp,                        
                         getApiR)
        
 import Heat.Authenticate (postAuthenticateR)
+import Heat.Model (migrateAll)
 
 --
 -- The dispatcher
 --
 mkYesodDispatch "App" resourcesApp
 
+makeFoundation :: AppSettings -> IO App
+makeFoundation appSettings = do
+  appHttpManager <- newManager
+  appLogger <- newStdoutLoggerSet defaultBufSize >>= makeYesodLogger
+
+  let mkFoundation appConnPool = App {..}
+      tempFoundation = mkFoundation $ error "connPool forced in tempFoundation"
+      logFunc = messageLoggerSource tempFoundation appLogger
+
+  pool <- flip runLoggingT logFunc $ createPostgresqlPool
+          (pgConnStr $ databaseConf appSettings)
+          (pgPoolSize $ databaseConf appSettings)
+
+  flip runLoggingT logFunc $ flip runSqlPool pool $ runMigration migrateAll
+
+  return $ mkFoundation pool
+
 -- |The main entry point for the application
 appMain :: IO ()
-appMain = warp 3000 App { settings = defaultSettings }
+appMain = do
+  foundation <- makeFoundation defaultSettings
+  warp 3000 foundation

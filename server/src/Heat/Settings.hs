@@ -18,13 +18,26 @@ module Heat.Settings (AppSettings(..),
 -- External imports
 --
 import Data.Text (Text)
+import Database.Persist.Postgresql (PostgresConf (..))
 
 -- |Our application settings
 data AppSettings = AppSettings {
-  jwtSecret :: Text -- ^The secret used to sign and verify a JSON Web Token
+  
+  tokenSecret :: Text            -- ^The secret used to sign and verify a JSON Web Token
+  , tokenExpiration :: Integer   -- ^The expiration time of the token in seconds
+  
+  , databaseConf :: PostgresConf -- ^The database configuration
+
+  , passwordSecret :: Text       -- ^The secret for the bcrypt password hash generation
+  , passwordCost:: Integer       -- ^The cost for the bcrypt password hash generation
+  
   }
 
 -- |A default setting for our application
 defaultSettings = AppSettings {
-  jwtSecret = "mandelmassa"
+  tokenSecret = "mandelmassa",
+  tokenExpiration = 24*60*60,
+  databaseConf = PostgresConf "postgresql://heatserver:heatserver@localhost/heat" 5,
+  passwordSecret = "mandelmassa",
+  passwordCost = 4
   }

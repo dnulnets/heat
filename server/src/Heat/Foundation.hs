@@ -23,21 +23,29 @@ module Heat.Foundation (Handler,
 -- External imports
 --
 import Data.Text (Text)
+import Data.Time.Clock.System (getSystemTime, SystemTime(..))
 import Yesod
+import Yesod.Core.Types (Logger)
+import Database.Persist.Sql (ConnectionPool, SqlBackend, runSqlPool)
+import Database.Persist
 import Yesod.Auth
 import Data.Aeson (fromJSON,
                    Result(..))
+import Network.HTTP.Client.Conduit (Manager)
 --
 -- Heat imports
 --
 import Heat.Settings (AppSettings(..))
 import Heat.Utils.JWT (tokenToJson)
 import Heat.Data.UserInfo (UserInfo(..))
+import Heat.Model
 
 -- |Our application type
 data App = App {
-  settings :: AppSettings -- ^The application settings
-  }
+  appSettings :: AppSettings -- ^The application settings
+  , appConnPool    :: ConnectionPool -- ^ Database connection pool.
+  , appHttpManager :: Manager
+  , appLogger :: Logger  }
 
 --
 -- The routes to this server
@@ -61,7 +69,7 @@ instance Yesod App where
 instance YesodAuth App where
 
   -- |Our authentication id
-  type AuthId App = Text
+  type AuthId App = UserId
 
   -- We are only publishing a REST JSON API, this is not needed but required
   -- by the Yesod API, implemented as error or empty
@@ -73,17 +81,30 @@ instance YesodAuth App where
   -- |Check the JSON Web token and return with the user identity if it is valid
   maybeAuthId = do
     bearer <- lookupBearerAuth
-    secret <- jwtSecret . settings <$> getYesod
+    seconds <- liftIO $ systemSeconds <$> getSystemTime    
+    secret <- tokenSecret . appSettings <$> getYesod
     return $ case bearer of
       Nothing -> Nothing
       Just token ->
-        case tokenToJson secret token of
+        case tokenToJson secret (fromIntegral seconds) token of
           Nothing -> Nothing
           Just userinfo ->
             case fromJSON userinfo of
               Error _ -> Nothing
-              Success info -> Just $ userid info
-           
+              Success info -> Just $ info
+
+-- How to run database actions.
+instance YesodPersist App where
+  type YesodPersistBackend App = SqlBackend
+  runDB action = do
+    master <- getYesod
+    runSqlPool action $ appConnPool master
+
+instance YesodAuthPersist App
+
+instance YesodPersistRunner App where
+  getDBRunner = defaultGetDBRunner appConnPool
+
 --
 -- The rendermessage interface, needed by YesodAuth
 --
@@ -93,7 +114,11 @@ instance RenderMessage App FormMessage where
 getApiR :: Handler TypedContent
 getApiR = do
   uid <- requireAuthId
+  u <- requireAuth
+  liftIO $ print $ case u of
+    Entity _ e -> show e
+    otherwise -> "Nothing"
   addHeader "myheader" "headerdata"
   selectRep $ do
-    provideJson $ UserInfo "jfohfrhufri"
+    provideJson $ UserInfo 1
     
