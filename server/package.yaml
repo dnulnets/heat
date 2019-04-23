@@ -39,6 +39,7 @@ dependencies:
 - monad-logger
 - bytestring
 - cryptonite
+- strings
 
 library:
   source-dirs: src

@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: d2b859eed3db4ac781644c033d3a069d80453d67f7a6cf2fb491c1ce5b307b93
+-- hash: ddc7ab821d713c1dda153ce4e4a2a77068341e917f7d5d2b74aa0637a780b8b6
 
 name:           server
 version:        0.1.0.0
@@ -55,6 +55,7 @@ library
     , persistent
     , persistent-postgresql
     , persistent-template
+    , strings
     , text
     , time
     , wai
@@ -85,6 +86,7 @@ executable server-exe
     , persistent-postgresql
     , persistent-template
     , server
+    , strings
     , text
     , time
     , wai
@@ -116,6 +118,7 @@ test-suite server-test
     , persistent-postgresql
     , persistent-template
     , server
+    , strings
     , text
     , time
     , wai

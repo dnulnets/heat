@@ -1,6 +1,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE TemplateHaskell   #-}
 {-# LANGUAGE RecordWildCards #-}
+{-# LANGUAGE ViewPatterns #-}
 
 -- |
 -- Module      : Application
@@ -44,7 +45,7 @@ import Heat.Foundation (App(..),
 -- Our routes
 --
 import Heat.Authenticate (postAuthenticateR)
-import Heat.Handler.User (putUserR, getUserR)
+import Heat.Handler.User (putUserR, getUserR, getUserCrudR)
 
 --
 -- The dispatcher

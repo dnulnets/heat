@@ -2,6 +2,8 @@
 {-# LANGUAGE TemplateHaskell   #-}
 {-# LANGUAGE TypeFamilies      #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE QuasiQuotes #-}
+{-# LANGUAGE ViewPatterns #-}
 
 -- |
 -- Module      : Heat.Foundation
@@ -50,7 +52,12 @@ data App = App {
 --
 -- The routes to this server
 --
-mkYesodData "App" $(parseRoutesFile "config/routes")
+mkYesodData "App" [parseRoutes|
+/api ApiR GET
+/user UserR PUT GET
+/user/#UserId UserCrudR GET
+/authenticate AuthenticateR POST
+|]
 
 -- |Our application is a Yesod application
 instance Yesod App where
@@ -62,7 +69,8 @@ instance Yesod App where
   isAuthorized AuthenticateR _ = return Authorized
   isAuthorized UserR _ = return Authorized
   isAuthorized ApiR _ = return Authorized
-    
+  isAuthorized (UserCrudR _) _ = return Authorized
+  
 --
 -- Authorization interface
 --

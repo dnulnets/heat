@@ -1,5 +1,6 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE DeriveGeneric #-}
+{-# LANGUAGE TemplateHaskell #-}
 
 -- |
 -- Module      : Heat.Handler.UserAuthenticate
@@ -11,12 +12,13 @@
 -- Portability : POSIX
 -- 
 -- This module contains the handlers for the user object
-module Heat.Handler.User (putUserR, getUserR) where
+module Heat.Handler.User (putUserR, getUserR, getUserCrudR) where
 
 --
 -- External imports
 --
 import GHC.Generics (Generic)
+-- import Data.Strings (strTail)
 import Data.Text (Text)
 import Data.Text.Encoding (encodeUtf8, decodeUtf8)
 import Data.ByteString (ByteString)
@@ -27,7 +29,8 @@ import Network.HTTP.Types.Status (created201)
 -- Internal imports
 --
 import Yesod
-import Heat.Model
+import Data.Aeson.TH
+
 --
 -- Heat imports
 --
@@ -37,36 +40,60 @@ import Heat.Utils.JWT (jsonToToken)
 import Heat.Data.UserInfo (UserInfo (..))
 import Heat.Data.Role (UserRole(..))
 import Heat.Utils.Password (authHashPassword, authValidatePassword)
+import Heat.Model
 
 -- |NewUser body description, comes with the PUT
-data NewUser = NewUser
-  { username :: Text  -- ^The username of the user
-  , password  :: Text -- ^The password to authenticate the user with
-  , role :: UserRole  -- ^The role of the user
-  , level :: Int      -- ^The level of the user within its role
-  , email :: Text     -- ^The email address to the user
+data CreateUser = CreateUser
+  { cusername :: Text  -- ^The username of the user
+  , cpassword  :: Text -- ^The password to authenticate the user with
+  , crole :: UserRole  -- ^The role of the user
+  , clevel :: Int      -- ^The level of the user within its role
+  , cemail :: Text     -- ^The email address to the user
   } deriving (Generic, Show)
 
-instance FromJSON NewUser
-instance ToJSON NewUser
-
-data NewUserKey = NewUserKey
+$(deriveJSON defaultOptions {
+    fieldLabelModifier = drop 1
+  } ''CreateUser)
+  
+data UserIdentity = UserIdentity
   { userid :: Key User
   } deriving (Generic, Show)
 
-instance ToJSON NewUserKey
+instance ToJSON UserIdentity
 
 -- |Authenticate the user and create a JSON Web Token that is returned so it can be used
 -- for following calls
 putUserR :: Handler ()
 putUserR = do
-  newUser <- requireCheckJsonBody :: Handler NewUser
+  newUser <- requireCheckJsonBody :: Handler CreateUser
   appset <- appSettings <$> getYesod
-  hpwd <- liftIO $ authHashPassword (passwordCost appset) (password newUser)
-  key <- runDB $ insert400 $ User (username newUser) (decodeUtf8 hpwd) (role newUser) (level newUser) (email newUser)
-  sendResponseStatus created201 $ toJSON $ NewUserKey key
+  hpwd <- liftIO $ authHashPassword (passwordCost appset) (cpassword newUser)
+  key <- runDB $ insert400 $ User (cusername newUser) (decodeUtf8 hpwd) (crole newUser) (clevel newUser) (cemail newUser)
+  sendResponseStatus created201 $ toJSON $ UserIdentity key
 
-getUserR :: Handler Value
+-- |Get a specific user given the userid, if no userid is given return with a
+-- list of all users.
+getUserR :: Handler Value -- ^The response
 getUserR = do
-  returnJson $ toJSON $ NewUser "tomas" "password" Simple 1 "tomas@stenlund.cc"
-  
+  returnJson $ toJSON $ RetrieveUser "tomas" Simple 1 "tomas@stenlund.cc"
+
+-- |User body description, comes with the CRUD operations
+data RetrieveUser = RetrieveUser
+  { rusername :: Text        -- ^The username of the user
+  , rrole :: UserRole        -- ^The role of the user
+  , rlevel :: Int            -- ^The level of the user within its role
+  , remail :: Text           -- ^The email address to the user
+  } deriving (Generic, Show)
+
+$(deriveJSON defaultOptions {
+     fieldLabelModifier = drop 1
+     } ''RetrieveUser)
+
+getUserCrudR :: UserId
+             -> Handler Value
+getUserCrudR uid = do
+  user <- runDB $ get404 uid
+  returnJson $ toJSON $ RetrieveUser { rusername = userUsername user,
+                                     rrole = userRole user,
+                                     rlevel = userLevel user,
+                                     remail = userEmail user}
