@@ -44,7 +44,7 @@ import Heat.Foundation (App(..),
 -- Our routes
 --
 import Heat.Authenticate (postAuthenticateR)
-import Heat.Handler.User (putUserR)
+import Heat.Handler.User (putUserR, getUserR)
 
 --
 -- The dispatcher

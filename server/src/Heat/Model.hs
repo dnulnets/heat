@@ -10,17 +10,18 @@
 
 module Heat.Model where
 
-import           Data.Typeable (Typeable)
-import           Data.Text (Text)
-import           Database.Persist
-import           Database.Persist.Quasi
-import           Database.Persist.TH
+import Data.Typeable (Typeable)
+import Data.Text (Text)
+import Database.Persist
+import Database.Persist.Quasi
+import Database.Persist.TH
+import Heat.Data.Role
 
 share [mkPersist sqlSettings, mkMigrate "migrateAll"] [persistLowerCase|
 User
     username Text
     password Text
-    role Text
+    role UserRole
     level Int
     email Text
     UniqueUserUsername username    

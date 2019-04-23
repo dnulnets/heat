@@ -11,7 +11,7 @@
 -- Portability : POSIX
 -- 
 -- This module contains the handlers for the user object
-module Heat.Handler.User (putUserR) where
+module Heat.Handler.User (putUserR, getUserR) where
 
 --
 -- External imports
@@ -35,21 +35,23 @@ import Heat.Settings (AppSettings(..))
 import Heat.Foundation (appSettings, Handler)
 import Heat.Utils.JWT (jsonToToken)
 import Heat.Data.UserInfo (UserInfo (..))
+import Heat.Data.Role (UserRole(..))
 import Heat.Utils.Password (authHashPassword, authValidatePassword)
 
 -- |NewUser body description, comes with the PUT
 data NewUser = NewUser
   { username :: Text  -- ^The username of the user
   , password  :: Text -- ^The password to authenticate the user with
-  , role :: Text      -- ^The role of the user, can be either "user" or "admin"
+  , role :: UserRole  -- ^The role of the user
   , level :: Int      -- ^The level of the user within its role
   , email :: Text     -- ^The email address to the user
   } deriving (Generic, Show)
 
 instance FromJSON NewUser
+instance ToJSON NewUser
 
 data NewUserKey = NewUserKey
-  { key :: Int
+  { userid :: Key User
   } deriving (Generic, Show)
 
 instance ToJSON NewUserKey
@@ -62,5 +64,9 @@ putUserR = do
   appset <- appSettings <$> getYesod
   hpwd <- liftIO $ authHashPassword (passwordCost appset) (password newUser)
   key <- runDB $ insert400 $ User (username newUser) (decodeUtf8 hpwd) (role newUser) (level newUser) (email newUser)
-  liftIO $ print $ show key
-  sendResponseStatus created201 $ toJSON key
+  sendResponseStatus created201 $ toJSON $ NewUserKey key
+
+getUserR :: Handler Value
+getUserR = do
+  returnJson $ toJSON $ NewUser "tomas" "password" Simple 1 "tomas@stenlund.cc"
+  
