@@ -12,7 +12,7 @@
 -- Portability : POSIX
 -- 
 -- This module contains the handlers for the user object
-module Heat.Handler.User (putUserR, getUserR, getUserCrudR) where
+module Heat.Handler.User (putUserR, getUserR, getUserCrudR, postUserCrudR) where
 
 --
 -- External imports
@@ -52,18 +52,43 @@ data CreateUser = CreateUser
   } deriving (Generic, Show)
 
 $(deriveJSON defaultOptions {
-    fieldLabelModifier = drop 1
+    fieldLabelModifier = drop 1 -- Get rid of the first character in the field names
   } ''CreateUser)
-  
+
+-- |User body description, comes with the CRUD operations
+data RetrieveUser = RetrieveUser
+  { ruserid :: UserId        -- ^The unique user id of the user
+  , rusername :: Text        -- ^The username of the user
+  , rrole :: UserRole        -- ^The role of the user
+  , rlevel :: Int            -- ^The level of the user within its role
+  , remail :: Text           -- ^The email address to the user
+  } deriving (Generic, Show)
+
+$(deriveJSON defaultOptions {
+     fieldLabelModifier = drop 1 -- Get rid of the first character in the field names
+     } ''RetrieveUser)
+
+-- |User body description, comes with the CRUD operations
+data UpdateUser = UpdateUser
+  { uusername :: Maybe Text   -- ^The username of the user
+  , urole :: Maybe UserRole   -- ^The role of the user
+  , ulevel :: Maybe Int       -- ^The level of the user within its role
+  , uemail :: Maybe Text      -- ^The email address to the user
+  } deriving (Generic, Show)
+
+$(deriveJSON defaultOptions {
+     fieldLabelModifier = drop 1 -- Get rid of the first character in the field names
+     } ''UpdateUser)
+
+  -- | The user identity, used when creating and deleting users
 data UserIdentity = UserIdentity
-  { userid :: Key User
+  { userid :: Key User -- ^The users unique identity, machine generated
   } deriving (Generic, Show)
 
 instance ToJSON UserIdentity
 
--- |Authenticate the user and create a JSON Web Token that is returned so it can be used
--- for following calls
-putUserR :: Handler ()
+-- |Creates a user, check for uniqueness and hash the password. Return with the unique user identity.
+putUserR :: Handler Value
 putUserR = do
   newUser <- requireCheckJsonBody :: Handler CreateUser
   appset <- appSettings <$> getYesod
@@ -71,29 +96,37 @@ putUserR = do
   key <- runDB $ insert400 $ User (cusername newUser) (decodeUtf8 hpwd) (crole newUser) (clevel newUser) (cemail newUser)
   sendResponseStatus created201 $ toJSON $ UserIdentity key
 
--- |Get a specific user given the userid, if no userid is given return with a
--- list of all users.
+-- |Return with a list of all users
 getUserR :: Handler Value -- ^The response
 getUserR = do
-  returnJson $ toJSON $ RetrieveUser "tomas" Simple 1 "tomas@stenlund.cc"
+  users <- (runDB $ selectList [] [Asc UserId])
+  returnJson $ map convert users
 
--- |User body description, comes with the CRUD operations
-data RetrieveUser = RetrieveUser
-  { rusername :: Text        -- ^The username of the user
-  , rrole :: UserRole        -- ^The role of the user
-  , rlevel :: Int            -- ^The level of the user within its role
-  , remail :: Text           -- ^The email address to the user
-  } deriving (Generic, Show)
+convert::Entity User->RetrieveUser
+convert (Entity uid user) = RetrieveUser { ruserid = uid
+                                         , rusername = userUsername user
+                                         , rrole = userRole user
+                                         , rlevel = userLevel user
+                                         , remail = userEmail user}
 
-$(deriveJSON defaultOptions {
-     fieldLabelModifier = drop 1
-     } ''RetrieveUser)
-
-getUserCrudR :: UserId
-             -> Handler Value
+-- |Retrieve the specified user if it exists.
+getUserCrudR :: UserId          -- ^The users identity
+             -> Handler Value   -- ^The response
 getUserCrudR uid = do
   user <- runDB $ get404 uid
-  returnJson $ toJSON $ RetrieveUser { rusername = userUsername user,
-                                     rrole = userRole user,
-                                     rlevel = userLevel user,
-                                     remail = userEmail user}
+  returnJson $ RetrieveUser { ruserid = uid
+                            , rusername = userUsername user
+                            , rrole = userRole user
+                            , rlevel = userLevel user
+                            , remail = userEmail user}
+
+-- |Creates a user, check for uniqueness and hash the password. Return with the unique user identity.
+postUserCrudR :: UserId     -- ^The user identity
+              -> Handler () -- ^The response
+postUserCrudR uid = do
+  user <- requireCheckJsonBody :: Handler UpdateUser
+  runDB $ update uid $
+       maybe [] (\f -> [ UserUsername =. f] ) (uusername user) <>
+       maybe [] (\f -> [ UserRole =. f] ) (urole user) <>
+       maybe [] (\f -> [ UserLevel =. f] ) (ulevel user) <>
+       maybe [] (\f -> [ UserEmail =. f] ) (uemail user)       
