@@ -12,7 +12,7 @@
 -- Portability : POSIX
 -- 
 -- This module contains the handlers for the user object
-module Heat.Handler.User (putUserR, getUserR, getUserCrudR, postUserCrudR) where
+module Heat.Handler.User (putUserR, getUserR, getUserCrudR, postUserCrudR, deleteUserCrudR) where
 
 --
 -- External imports
@@ -25,6 +25,7 @@ import Data.ByteString (ByteString)
 import Data.Time.Clock.System (getSystemTime,
                                SystemTime(..))
 import Network.HTTP.Types.Status (created201)
+
 --
 -- Internal imports
 --
@@ -101,13 +102,12 @@ getUserR :: Handler Value -- ^The response
 getUserR = do
   users <- (runDB $ selectList [] [Asc UserId])
   returnJson $ map convert users
-
-convert::Entity User->RetrieveUser
-convert (Entity uid user) = RetrieveUser { ruserid = uid
-                                         , rusername = userUsername user
-                                         , rrole = userRole user
-                                         , rlevel = userLevel user
-                                         , remail = userEmail user}
+  where
+    convert (Entity uid user) = RetrieveUser { ruserid = uid
+                                             , rusername = userUsername user
+                                             , rrole = userRole user
+                                             , rlevel = userLevel user
+                                             , remail = userEmail user}
 
 -- |Retrieve the specified user if it exists.
 getUserCrudR :: UserId          -- ^The users identity
@@ -120,13 +120,27 @@ getUserCrudR uid = do
                             , rlevel = userLevel user
                             , remail = userEmail user}
 
--- |Creates a user, check for uniqueness and hash the password. Return with the unique user identity.
+-- |Updates fields for a specific user
 postUserCrudR :: UserId     -- ^The user identity
               -> Handler () -- ^The response
 postUserCrudR uid = do
+  
   user <- requireCheckJsonBody :: Handler UpdateUser
   runDB $ update uid $
-       maybe [] (\f -> [ UserUsername =. f] ) (uusername user) <>
-       maybe [] (\f -> [ UserRole =. f] ) (urole user) <>
-       maybe [] (\f -> [ UserLevel =. f] ) (ulevel user) <>
-       maybe [] (\f -> [ UserEmail =. f] ) (uemail user)       
+    changeField UserUsername (uusername user) <>
+    changeField UserRole (urole user) <>
+    changeField UserLevel (ulevel user) <>
+    changeField UserEmail (uemail user)
+  return ()
+  
+  where
+    
+    changeField::(PersistField a) => EntityField User a -> Maybe a -> [Update User]
+    changeField field (Just value) = [field =. value]
+    changeField _ Nothing  = []
+    
+-- |Delete the specified user
+deleteUserCrudR :: UserId       -- ^The users identity
+                -> Handler ()   -- ^The response
+deleteUserCrudR uid = do
+  runDB $ delete uid

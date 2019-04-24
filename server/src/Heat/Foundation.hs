@@ -55,12 +55,18 @@ data App = App {
 mkYesodData "App" [parseRoutes|
 /api ApiR GET
 /user UserR PUT GET
-/user/#UserId UserCrudR GET POST
+/user/#UserId UserCrudR GET POST DELETE
 /authenticate AuthenticateR POST
 |]
 
 -- |Our application is a Yesod application
 instance Yesod App where
+
+  errorHandler (InternalError e) = do
+    $(logWarn) e
+    selectRep $ do
+      provideRep $ return $ object ["message" .= ("Internal error, should not happen - duplicate SQL Error maybe ?" :: Text)]
+  errorHandler other = defaultErrorHandler other
 
   -- |We do not want any cookies or session data
   makeSessionBackend _ = return Nothing
