@@ -7,9 +7,16 @@ module Slip.Component.Login where
 
 -- | Language imports
 import Prelude
+
 import Data.Maybe (Maybe(..), fromMaybe)
+import Data.Either (Either(..))
+import Data.Argonaut (class EncodeJson, class DecodeJson, Json, encodeJson, fromArray, decodeJson, jsonEmptyObject, (~>), (~>?), (:=), (:=?), (.:), (.:?), (.!=))
+import Data.Argonaut.Core as J
 import Effect.Aff.Class (class MonadAff)
 import Effect.Console (log)
+import Affjax as AX
+import Affjax.ResponseFormat as AXRF
+import Affjax.RequestBody as AXRB
 
 -- | Halogen import
 import Halogen as H
@@ -84,6 +91,22 @@ render state = HH.div
                 ]
                ]
 
+data Authenticate = Authenticate { username :: String,
+                                   password :: String }
+
+instance decodeJsonPost :: DecodeJson Authenticate where
+  decodeJson json = do
+    obj <- decodeJson json
+    username <- obj .: "username"
+    password <- obj .: "password"
+    pure $ Authenticate { username, password }
+
+instance encodeJsonPost :: EncodeJson Authenticate where
+  encodeJson (Authenticate auth)
+    = "username" := auth.username
+    ~> "password" := auth.password
+    ~> jsonEmptyObject
+            
 -- | Handles all actions for the login component
 handleAction ∷ ∀ m .
                MonadAff m ⇒
@@ -91,9 +114,21 @@ handleAction ∷ ∀ m .
 
 -- | Submit => Whenever the Login button is pressed, it will generate a submit message
 handleAction Submit = do
+  
   state <- H.get
+  
   H.liftEffect $ log $ "Submit" <> fromMaybe "<nothing>" state.username <> " " <> fromMaybe "<nothing>" state.password
+
+  result <- H.liftAff $ AX.post AXRF.json "http://localhost:3000/authenticate"
+            (AXRB.json (encodeJson $ Authenticate { username: fromMaybe "" state.username
+                                                  , password: fromMaybe "" state.password}))
+
+  H.liftEffect $ case result.body of
+    Left err -> log $ "POST /authenticate response failed to decode: " <> AX.printResponseFormatError err
+    Right json -> log $ "POST /authenticate response: " <> J.stringify json
+    
   H.raise (Child.Alert DAL.Error "Unable to login, wrong username or password")  
+
 
 -- | Input f => Whenever the textbox entry is done, i.e. by leaving the box or pressing another control it generates a
 -- | Input f message, where f is the function that operatos on the state to save the new value.
