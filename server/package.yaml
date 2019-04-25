@@ -26,6 +26,8 @@ dependencies:
 - yesod-auth
 - http-types
 - wai
+- wai-cors
+- wai-extra
 - containers
 - jwt
 - aeson
@@ -40,6 +42,8 @@ dependencies:
 - bytestring
 - cryptonite
 - strings
+- warp
+- data-default-class
 
 library:
   source-dirs: src

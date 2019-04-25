@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: ddc7ab821d713c1dda153ce4e4a2a77068341e917f7d5d2b74aa0637a780b8b6
+-- hash: d8cf044a4ebfd807f01e0543043ba5b2bc79caf054191d42dfe7399e0553e6da
 
 name:           server
 version:        0.1.0.0
@@ -33,6 +33,7 @@ library
       Heat.Data.UserInfo
       Heat.Foundation
       Heat.Handler.User
+      Heat.Middleware
       Heat.Model
       Heat.Settings
       Heat.Utils.JWT
@@ -47,6 +48,7 @@ library
     , bytestring
     , containers
     , cryptonite
+    , data-default-class
     , fast-logger
     , http-conduit
     , http-types
@@ -59,6 +61,9 @@ library
     , text
     , time
     , wai
+    , wai-cors
+    , wai-extra
+    , warp
     , yesod
     , yesod-auth
     , yesod-core
@@ -77,6 +82,7 @@ executable server-exe
     , bytestring
     , containers
     , cryptonite
+    , data-default-class
     , fast-logger
     , http-conduit
     , http-types
@@ -90,6 +96,9 @@ executable server-exe
     , text
     , time
     , wai
+    , wai-cors
+    , wai-extra
+    , warp
     , yesod
     , yesod-auth
     , yesod-core
@@ -109,6 +118,7 @@ test-suite server-test
     , bytestring
     , containers
     , cryptonite
+    , data-default-class
     , fast-logger
     , http-conduit
     , http-types
@@ -122,6 +132,9 @@ test-suite server-test
     , text
     , time
     , wai
+    , wai-cors
+    , wai-extra
+    , warp
     , yesod
     , yesod-auth
     , yesod-core

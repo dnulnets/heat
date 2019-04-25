@@ -21,21 +21,37 @@ module Application (appMain) where
 --
 import Control.Monad.Logger (runLoggingT)
 
+import Data.Default.Class (Default (def))
+
 import Database.Persist.Sql (runSqlPool, runMigration)
 import Database.Persist.Postgresql (createPostgresqlPool, PostgresConf(..))
 
 import Yesod
+import Yesod.Core.Types (loggerSet)
 import Yesod.Default.Config2 (makeYesodLogger)
 import Network.HTTP.Client.Conduit (Manager, newManager)
 
 import System.Log.FastLogger (defaultBufSize,
                               newStdoutLoggerSet,
                               toLogStr)
+
+import Network.Wai (Middleware)
+import Network.Wai.Handler.Warp (run)
+import Network.Wai.Middleware.Cors
+import Network.Wai.Middleware.RequestLogger (RequestLoggerSettings(..),
+                                              Destination (..),
+                                              IPAddrSource (..),
+                                              OutputFormat (..),
+                                              destination,
+                                              mkRequestLogger,
+                                              outputFormat)
+       
 --
 -- Internal imports
 --
 import Heat.Model (migrateAll)
 import Heat.Settings (defaultSettings, AppSettings(..))
+import Heat.Middleware (corsified)
 import Heat.Foundation (App(..),
                         Route(..),                        
                         resourcesApp,                        
@@ -52,6 +68,9 @@ import Heat.Handler.User (putUserR, getUserR, getUserCrudR, postUserCrudR, delet
 --
 mkYesodDispatch "App" resourcesApp
 
+--
+-- Create the Yesod Foundation
+--
 makeFoundation :: AppSettings -> IO App
 makeFoundation appSettings = do
   appHttpManager <- newManager
@@ -69,8 +88,28 @@ makeFoundation appSettings = do
 
   return $ mkFoundation pool
 
+--
+-- Create a logger for the WAI application
+--
+makeLogWare :: App -> IO Middleware
+makeLogWare foundation =
+    mkRequestLogger def
+        { outputFormat = Detailed True
+        , destination = Logger $ loggerSet $ appLogger foundation
+}
+
+--
+-- Makes a WAI Application, and add the logger
+--
+makeApplication :: App -> IO Application
+makeApplication foundation = do
+  logWare <- makeLogWare foundation  
+  appPlain <- toWaiAppPlain foundation
+  return $ logWare $ corsified appPlain
+
 -- |The main entry point for the application
 appMain :: IO ()
 appMain = do
   foundation <- makeFoundation defaultSettings
-  warp 3000 foundation
+  application <- makeApplication foundation
+  run 3000 application
