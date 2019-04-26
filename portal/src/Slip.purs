@@ -10,9 +10,13 @@ module Slip(Environment,
 -- | Language imports
 import Prelude
 
+import Data.Maybe (Maybe(..))
+
 import Effect.Aff (Aff)
 import Effect.Aff.Class (class MonadAff)
 import Effect.Class (class MonadEffect)
+import Effect.Ref (Ref)
+import Effect.Ref as Ref
 
 import Type.Equality (class TypeEquals, from)
 
@@ -21,9 +25,9 @@ import Control.Monad.Reader.Class (class MonadAsk)
 import Control.Monad.Reader.Trans (ReaderT)
 
 -- | The application environment
-type Environment = {
-  userName ∷ String
-  }
+type Environment = { user ∷ Maybe String,
+                     token :: Ref (Maybe String)  
+                   }
 
 -- | The application monad
 newtype ApplicationM a = ApplicationM (ReaderT Environment Aff a)

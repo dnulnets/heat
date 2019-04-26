@@ -14,6 +14,7 @@ import Data.String.CodeUnits as Str
 import Effect (Effect)
 import Effect.Aff (Aff)
 import Effect.Class (liftEffect)
+import Effect.Ref as Ref
 import Effect.Console (log)
 import Control.Coroutine as CR
 import Control.Coroutine.Aff (emit)
@@ -63,17 +64,18 @@ hashChangeConsumer query = CR.consumer \event -> do
   void $ query $ H.tell $ Root.GotoPage newPage
   pure Nothing
 
--- | Set up our environment which we will execute in
-environment ∷ Environment
-environment = { userName : "Tomas Stenlund"}
-
 -- | Hoist in our Application monad
-rootComponent ∷ ∀ i . H.Component HH.HTML Root.Query i Void Aff
-rootComponent = hoist (runApplication environment) Root.component
+rootComponent ∷ ∀ i . Environment →
+                H.Component HH.HTML Root.Query i Void Aff
+rootComponent env = hoist (runApplication env) Root.component
 
 -- | The main function
 main ∷ Effect Unit
 main = HA.runHalogenAff do
+  currentToken <- liftEffect $ Ref.new Nothing
   body ← HA.awaitBody
-  io ← runUI rootComponent unit body
+  let
+    env ∷ Environment
+    env = { user : Nothing, token: currentToken }
+  io ← runUI (rootComponent env) unit body
   CR.runProcess (hashChangeProducer CR.$$ hashChangeConsumer io.query)  

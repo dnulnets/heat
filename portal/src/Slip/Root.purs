@@ -8,12 +8,17 @@ module Slip.Root (component,
 
 -- | Language imports
 import Prelude
+
 import Data.Maybe (Maybe(..))
 import Data.Symbol (SProxy(..))
+
 import Control.Monad.Reader.Trans (class MonadAsk, asks)
 import Control.Monad.Trans.Class (lift)
+
 import Effect.Aff.Class (class MonadAff)
 import Effect.Console (log)
+import Effect.Ref (Ref)
+import Effect.Ref as Ref
 
 -- | Halogen imports
 import Halogen as H
@@ -36,7 +41,7 @@ data Query a = GotoPage Page a
 -- | The actions supported by the root page
 data Action = SetUser |
               LoginMessage Child.Message |
-              HomeMessage Child.Message
+              HomeMessage  Child.Message
 
 -- | The state for the application, it will contain the logged in user among other things
 type State = { user ∷ Maybe String,
@@ -57,7 +62,7 @@ _main = SProxy::SProxy "main"
 -- | The root component definition
 component :: ∀ i o r m .
              MonadAff m
-             ⇒ MonadAsk { userName :: String | r } m
+             ⇒ MonadAsk { user :: Maybe String, token ∷ Ref (Maybe String) | r } m
              ⇒ H.Component HH.HTML Query i o m
 component =
   H.mkComponent
@@ -74,7 +79,9 @@ initialState _ = { user: Nothing,
                    alert: Nothing }
 
 -- | Render the root application, it contains a menu, alert data, main page view and a footer
-render ∷ ∀ m . MonadAff m ⇒ State → H.ComponentHTML Action ChildSlots m
+render ∷ ∀ m r. MonadAff m
+         ⇒ MonadAsk { user :: Maybe String, token ∷ Ref (Maybe String) | r } m
+         ⇒ State → H.ComponentHTML Action ChildSlots m
 render state = HH.div
                [css "container"]
                [HH.slot _menu unit Menu.component unit absurd,
@@ -93,7 +100,9 @@ render state = HH.div
                ]
 
 -- | Render the main view of the page
-view ∷ ∀ m. MonadAff m ⇒ Page → H.ComponentHTML Action ChildSlots m
+view ∷ ∀ r m. MonadAff m
+       ⇒ MonadAsk { user :: Maybe String, token ∷ Ref (Maybe String) | r } m
+       ⇒ Page → H.ComponentHTML Action ChildSlots m
 view Login = HH.slot _main "login" Login.component unit (Just <<< LoginMessage)
 view Home = HH.slot _main "home" Home.component unit (Just <<< HomeMessage)
 view _ = HH.div
@@ -115,7 +124,7 @@ view _ = HH.div
 -- | Handle the queries sent to the root page
 handleQuery ∷ ∀ r o m a .
               MonadAff m ⇒ 
-              MonadAsk { userName :: String | r } m ⇒ 
+              MonadAsk { user :: Maybe String, token ∷ Ref (Maybe String) | r } m ⇒ 
               Query a → H.HalogenM State Action ChildSlots o m (Maybe a)
 handleQuery = case _ of
   GotoPage page a → do
@@ -126,15 +135,15 @@ handleQuery = case _ of
 -- | Handle the actions within the root page
 handleAction ∷ ∀ r o m .
                 MonadAff m ⇒
-                MonadAsk { userName :: String | r } m ⇒
+                MonadAsk { user :: Maybe String, token :: Ref (Maybe String) | r } m ⇒
                 Action → H.HalogenM State Action ChildSlots o m Unit
 
 -- | Sets the user that has logged in
 handleAction SetUser =
   do
-    name <- lift $ asks _.userName
+    name <- lift $ asks _.user
     state <- H.get
-    H.put $ state { user = Just name }
+    H.put $ state { user = name }
 
 -- | Handles messages sent out from the Login view
 -- |

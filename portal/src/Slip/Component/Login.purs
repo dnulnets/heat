@@ -8,15 +8,23 @@ module Slip.Component.Login where
 -- | Language imports
 import Prelude
 
-import Data.Maybe (Maybe(..), fromMaybe)
+import Data.Maybe (Maybe(..),
+                   fromMaybe)
 import Data.Either (Either(..))
-import Data.Argonaut (class EncodeJson, class DecodeJson, Json, encodeJson, fromArray, decodeJson, jsonEmptyObject, (~>), (~>?), (:=), (:=?), (.:), (.:?), (.!=))
-import Data.Argonaut.Core as J
+
+import Data.Argonaut.Core (stringify)
+import Data.Argonaut (class EncodeJson, class DecodeJson, Json,
+                      encodeJson, fromArray, decodeJson,
+                      jsonEmptyObject, (~>), (~>?), (:=),
+                      (:=?), (.:), (.:?), (.!=))
+
 import Effect.Aff.Class (class MonadAff)
 import Effect.Console (log)
+
 import Affjax as AX
 import Affjax.ResponseFormat as AXRF
 import Affjax.RequestBody as AXRB
+import Affjax.StatusCode as AXS
 
 -- | Halogen import
 import Halogen as H
@@ -91,15 +99,18 @@ render state = HH.div
                 ]
                ]
 
-data Authenticate = Authenticate { username :: String,
-                                   password :: String }
+-- |The token returned after an authenticate is successful
+data Token = Token { token :: String }
 
-instance decodeJsonPost :: DecodeJson Authenticate where
+instance decodeJsonToken :: DecodeJson Token where
   decodeJson json = do
     obj <- decodeJson json
-    username <- obj .: "username"
-    password <- obj .: "password"
-    pure $ Authenticate { username, password }
+    token <- obj .: "token"
+    pure $ Token { token }
+
+-- |The authentication informaion needed to be able to authenticate the user and return a token
+data Authenticate = Authenticate { username :: String,
+                                   password :: String }
 
 instance encodeJsonPost :: EncodeJson Authenticate where
   encodeJson (Authenticate auth)
@@ -116,19 +127,26 @@ handleAction ∷ ∀ m .
 handleAction Submit = do
   
   state <- H.get
-  
-  H.liftEffect $ log $ "Submit" <> fromMaybe "<nothing>" state.username <> " " <> fromMaybe "<nothing>" state.password
 
+  -- Try to authenticate us
   result <- H.liftAff $ AX.post AXRF.json "http://localhost:3000/authenticate"
             (AXRB.json (encodeJson $ Authenticate { username: fromMaybe "" state.username
                                                   , password: fromMaybe "" state.password}))
 
-  H.liftEffect $ case result.body of
-    Left err -> log $ "POST /authenticate response failed to decode: " <> AX.printResponseFormatError err
-    Right json -> log $ "POST /authenticate response: " <> J.stringify json
-    
-  H.raise (Child.Alert DAL.Error "Unable to login, wrong username or password")  
-
+  case result.body of
+    Left err -> do
+      H.liftEffect $ log $ "POST /authenticate response failed to decode: " <> AX.printResponseFormatError err
+      H.raise (Child.Alert DAL.Error "Unable to login, invalid response from server")    
+    Right json -> do
+      case result.status of
+        AXS.StatusCode 200 -> do
+          H.liftEffect $ log $ "POST /authenticate response: " <> stringify json
+          H.raise (Child.Alert DAL.Info "Login succesful!")    
+        otherwise -> do
+          H.raise (Child.Alert DAL.Error "Unable to login, wrong username or password")
+          
+      H.liftEffect $ log $ "POST /authenticate response: " <> stringify json
+      H.liftEffect $ log $ "Result = " <> (show result.status)
 
 -- | Input f => Whenever the textbox entry is done, i.e. by leaving the box or pressing another control it generates a
 -- | Input f message, where f is the function that operatos on the state to save the new value.
@@ -137,6 +155,8 @@ handleAction (Input f) = do
   state <- H.get
   H.put $ f state
 
--- Scratch pad area
---
---  H.raise (Child.GotoPage Home)
+klapp::Json -> Maybe Token
+klapp j = case decodeJson j of
+  Left e -> Nothing
+  Right v ->  Just v
+    
