@@ -38,55 +38,16 @@ import Data.Aeson.TH
 import Heat.Settings (AppSettings(..))
 import Heat.Foundation (appSettings, Handler)
 import Heat.Utils.JWT (jsonToToken)
+import Heat.Data.Conversions (toKey, fromKey, toHex)
 import Heat.Data.UserInfo (UserInfo (..))
 import Heat.Data.Role (UserRole(..))
 import Heat.Utils.Password (authHashPassword, authValidatePassword)
+import Heat.Interface.User
 import Heat.Model
 
--- |NewUser body description, comes with the PUT
-data CreateUser = CreateUser
-  { cusername :: Text  -- ^The username of the user
-  , cpassword  :: Text -- ^The password to authenticate the user with
-  , crole :: UserRole  -- ^The role of the user
-  , clevel :: Int      -- ^The level of the user within its role
-  , cemail :: Text     -- ^The email address to the user
-  } deriving (Generic, Show)
-
-$(deriveJSON defaultOptions {
-    fieldLabelModifier = drop 1 -- Get rid of the first character in the field names
-  } ''CreateUser)
-
--- |User body description, comes with the CRUD operations
-data RetrieveUser = RetrieveUser
-  { ruserid :: UserId        -- ^The unique user id of the user
-  , rusername :: Text        -- ^The username of the user
-  , rrole :: UserRole        -- ^The role of the user
-  , rlevel :: Int            -- ^The level of the user within its role
-  , remail :: Text           -- ^The email address to the user
-  } deriving (Generic, Show)
-
-$(deriveJSON defaultOptions {
-     fieldLabelModifier = drop 1 -- Get rid of the first character in the field names
-     } ''RetrieveUser)
-
--- |User body description, comes with the CRUD operations
-data UpdateUser = UpdateUser
-  { uusername :: Maybe Text   -- ^The username of the user
-  , urole :: Maybe UserRole   -- ^The role of the user
-  , ulevel :: Maybe Int       -- ^The level of the user within its role
-  , uemail :: Maybe Text      -- ^The email address to the user
-  } deriving (Generic, Show)
-
-$(deriveJSON defaultOptions {
-     fieldLabelModifier = drop 1 -- Get rid of the first character in the field names
-     } ''UpdateUser)
-
-  -- | The user identity, used when creating and deleting users
-data UserIdentity = UserIdentity
-  { userid :: Key User -- ^The users unique identity, machine generated
-  } deriving (Generic, Show)
-
-instance ToJSON UserIdentity
+--
+-- PUT and GET for the /user path
+--
 
 -- |Creates a user, check for uniqueness and hash the password. Return with the unique user identity.
 putUserR :: Handler Value
@@ -95,7 +56,7 @@ putUserR = do
   appset <- appSettings <$> getYesod
   hpwd <- liftIO $ authHashPassword (passwordCost appset) (cpassword newUser)
   key <- runDB $ insert400 $ User (cusername newUser) (decodeUtf8 hpwd) (crole newUser) (clevel newUser) (cemail newUser)
-  sendResponseStatus created201 $ toJSON $ UserIdentity key
+  sendResponseStatus created201 $ toJSON $ UserIdentity (fromKey key)
 
 -- |Return with a list of all users
 getUserR :: Handler Value -- ^The response
@@ -103,30 +64,34 @@ getUserR = do
   users <- (runDB $ selectList [] [Asc UserId])
   returnJson $ map convert users
   where
-    convert (Entity uid user) = RetrieveUser { ruserid = uid
+    convert (Entity uid user) = RetrieveUser { ruserid = (fromKey uid)
                                              , rusername = userUsername user
                                              , rrole = userRole user
                                              , rlevel = userLevel user
                                              , remail = userEmail user}
 
+--
+-- GET, POST an DELEET for /usr/<identity>
+--
+
 -- |Retrieve the specified user if it exists.
-getUserCrudR :: UserId          -- ^The users identity
+getUserCrudR :: Text            -- ^The users identity
              -> Handler Value   -- ^The response
 getUserCrudR uid = do
-  user <- runDB $ get404 uid
-  returnJson $ RetrieveUser { ruserid = uid
+  user <- runDB $ get404 (toKey uid)
+  returnJson $ RetrieveUser { ruserid = toHex uid
                             , rusername = userUsername user
                             , rrole = userRole user
                             , rlevel = userLevel user
                             , remail = userEmail user}
 
 -- |Updates fields for a specific user
-postUserCrudR :: UserId     -- ^The user identity
+postUserCrudR :: Text     -- ^The user identity
               -> Handler () -- ^The response
 postUserCrudR uid = do
   
   user <- requireCheckJsonBody :: Handler UpdateUser
-  runDB $ update uid $
+  runDB $ update (toKey uid) $
     changeField UserUsername (uusername user) <>
     changeField UserRole (urole user) <>
     changeField UserLevel (ulevel user) <>
@@ -140,7 +105,7 @@ postUserCrudR uid = do
     changeField _ Nothing  = []
     
 -- |Delete the specified user
-deleteUserCrudR :: UserId       -- ^The users identity
+deleteUserCrudR :: Text         -- ^The users identity
                 -> Handler ()   -- ^The response
 deleteUserCrudR uid = do
-  runDB $ delete uid
+  runDB $ delete (toKey uid::UserId)

@@ -55,7 +55,7 @@ data App = App {
 mkYesodData "App" [parseRoutes|
 /api ApiR GET
 /user UserR PUT GET
-/user/#UserId UserCrudR GET POST DELETE
+/user/#Text UserCrudR GET POST DELETE
 /authenticate AuthenticateR POST
 |]
 

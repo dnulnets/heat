@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: d8cf044a4ebfd807f01e0543043ba5b2bc79caf054191d42dfe7399e0553e6da
+-- hash: 65445bd14c699a81732c2605cc0f1bc633390345fc0093a31219523a8b4460da
 
 name:           server
 version:        0.1.0.0
@@ -29,10 +29,12 @@ library
   exposed-modules:
       Application
       Heat.Authenticate
+      Heat.Data.Conversions
       Heat.Data.Role
       Heat.Data.UserInfo
       Heat.Foundation
       Heat.Handler.User
+      Heat.Interface.User
       Heat.Middleware
       Heat.Model
       Heat.Settings
@@ -50,6 +52,7 @@ library
     , cryptonite
     , data-default-class
     , fast-logger
+    , hexstring
     , http-conduit
     , http-types
     , jwt
@@ -84,6 +87,7 @@ executable server-exe
     , cryptonite
     , data-default-class
     , fast-logger
+    , hexstring
     , http-conduit
     , http-types
     , jwt
@@ -120,6 +124,7 @@ test-suite server-test
     , cryptonite
     , data-default-class
     , fast-logger
+    , hexstring
     , http-conduit
     , http-types
     , jwt
