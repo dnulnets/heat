@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 65445bd14c699a81732c2605cc0f1bc633390345fc0093a31219523a8b4460da
+-- hash: c4fc9afec65e8d4fcc918f3c3fa45e8f23306cac24909a394e03b22d660746f2
 
 name:           server
 version:        0.1.0.0
@@ -28,12 +28,13 @@ source-repository head
 library
   exposed-modules:
       Application
-      Heat.Authenticate
       Heat.Data.Conversions
       Heat.Data.Role
-      Heat.Data.UserInfo
       Heat.Foundation
+      Heat.Handler.Authenticate
       Heat.Handler.User
+      Heat.Interface.API
+      Heat.Interface.Authenticate
       Heat.Interface.User
       Heat.Middleware
       Heat.Model

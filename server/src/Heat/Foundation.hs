@@ -4,6 +4,7 @@
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE QuasiQuotes #-}
 {-# LANGUAGE ViewPatterns #-}
+{-# LANGUAGE StandaloneDeriving #-}
 
 -- |
 -- Module      : Heat.Foundation
@@ -25,6 +26,7 @@ module Heat.Foundation (Handler,
 -- External imports
 --
 import Data.Text (Text)
+import Data.HexString (HexString(..))
 import Data.Time.Clock.System (getSystemTime, SystemTime(..))
 import Yesod
 import Yesod.Core.Types (Logger)
@@ -39,8 +41,8 @@ import Network.HTTP.Client.Conduit (Manager)
 --
 import Heat.Settings (AppSettings(..))
 import Heat.Utils.JWT (tokenToJson)
-import Heat.Data.UserInfo (UserInfo(..))
 import Heat.Model
+import Heat.Interface.API (API(..))
 
 -- |Our application type
 data App = App {
@@ -134,4 +136,4 @@ getApiR = do
     Entity _ e -> show e
   addHeader "myheader" "headerdata"
   selectRep $ do
-    provideJson $ UserInfo 1
+    provideJson $ API "Heat" "0.1"

@@ -11,7 +11,7 @@
 -- Portability : POSIX
 -- 
 -- This module contains the authenticate route for the application
-module Heat.Authenticate (postAuthenticateR) where
+module Heat.Handler.Authenticate (postAuthenticateR) where
 
 --
 -- External imports
@@ -19,6 +19,7 @@ module Heat.Authenticate (postAuthenticateR) where
 import GHC.Generics (Generic)
 import Data.Text (Text)
 import Data.Text.Encoding (encodeUtf8, decodeUtf8)
+import Data.HexString (HexString)
 import Data.ByteString (ByteString)
 import Data.Time.Clock.System (getSystemTime,
                                SystemTime(..))
@@ -34,24 +35,10 @@ import Heat.Model
 import Heat.Settings (AppSettings(..))
 import Heat.Foundation (appSettings, Handler)
 import Heat.Utils.JWT (jsonToToken)
-import Heat.Data.UserInfo (UserInfo (..))
+import Heat.Data.Conversions (keyToHex)
 import Heat.Utils.Password (authHashPassword, authValidatePassword)
-
--- |Authenticate body description, comes with the POST
-data Authenticate = Authenticate
-  { username :: Text  -- ^The username of the user
-  , password  :: Text -- ^The password to authenticate the user with
-  } deriving (Generic, Show)
-
-instance FromJSON Authenticate
-
--- |The JSON Web token returned after authentication, response to the POST
-data Token = Token
-  { token :: Text -- ^The JSON Web token
-  } deriving (Generic, Show)
-
-instance ToJSON Token
-
+import Heat.Interface.Authenticate (Authenticate(..), Token (..))
+  
 -- |Authenticate the user and create a JSON Web Token that is returned so it can be used
 -- for following calls
 postAuthenticateR :: Handler Value
@@ -65,5 +52,5 @@ postAuthenticateR = do
     in case dbuser of
          Just (Entity userId user) | authValidatePassword (userPassword user) (password auth) -> do
                                        token <- return $ jsonToToken secret seconds length $ toJSON userId
-                                       returnJson $ Token token
+                                       returnJson $ Token (keyToHex userId) token
          _ -> notAuthenticated

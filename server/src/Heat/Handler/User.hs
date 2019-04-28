@@ -38,8 +38,7 @@ import Data.Aeson.TH
 import Heat.Settings (AppSettings(..))
 import Heat.Foundation (appSettings, Handler)
 import Heat.Utils.JWT (jsonToToken)
-import Heat.Data.Conversions (toKey, fromKey, toHex)
-import Heat.Data.UserInfo (UserInfo (..))
+import Heat.Data.Conversions (toKey, keyToHex, toHex)
 import Heat.Data.Role (UserRole(..))
 import Heat.Utils.Password (authHashPassword, authValidatePassword)
 import Heat.Interface.User
@@ -56,7 +55,7 @@ putUserR = do
   appset <- appSettings <$> getYesod
   hpwd <- liftIO $ authHashPassword (passwordCost appset) (cpassword newUser)
   key <- runDB $ insert400 $ User (cusername newUser) (decodeUtf8 hpwd) (crole newUser) (clevel newUser) (cemail newUser)
-  sendResponseStatus created201 $ toJSON $ UserIdentity (fromKey key)
+  sendResponseStatus created201 $ toJSON $ UserIdentity (keyToHex key)
 
 -- |Return with a list of all users
 getUserR :: Handler Value -- ^The response
@@ -64,7 +63,7 @@ getUserR = do
   users <- (runDB $ selectList [] [Asc UserId])
   returnJson $ map convert users
   where
-    convert (Entity uid user) = RetrieveUser { ruserid = (fromKey uid)
+    convert (Entity uid user) = RetrieveUser { ruserid = (keyToHex uid)
                                              , rusername = userUsername user
                                              , rrole = userRole user
                                              , rlevel = userLevel user

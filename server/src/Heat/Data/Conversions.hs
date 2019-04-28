@@ -44,12 +44,16 @@ import Database.Persist.Class
 import Heat.Data.Role
 import Heat.Model
 
-toHex::Text->HexString
+-- |Convert a Text string to a HexString, usually used to convert route parameters
+toHex::Text        -- ^The hexadecimal representation
+     ->HexString   -- ^The same representation but as a HexString
 toHex = hexString . encodeUtf8
 
+-- |Convert a Text string to a persistent key, usually used to convert route parameters
 toKey::ToBackendKey SqlBackend r => Text->Key r
-toKey = toSqlKey . toBinary . hexString . encodeUtf8
+toKey = toSqlKey . toBinary . toHex
 
-fromKey::ToBackendKey SqlBackend r => Key r->HexString
-fromKey = fromBinary . fromSqlKey
-
+-- |Convert a persistent key to a Text string, usually used to convert keys to
+-- fields in the body that are keys.
+keyToHex::ToBackendKey SqlBackend r => Key r->HexString
+keyToHex = fromBinary . fromSqlKey

@@ -26,42 +26,45 @@ import Data.Default.Class (Default (def))
 import Database.Persist.Sql (runSqlPool, runMigration)
 import Database.Persist.Postgresql (createPostgresqlPool, PostgresConf(..))
 
-import Yesod
-import Yesod.Core.Types (loggerSet)
-import Yesod.Default.Config2 (makeYesodLogger)
-import Network.HTTP.Client.Conduit (Manager, newManager)
-
 import System.Log.FastLogger (defaultBufSize,
                               newStdoutLoggerSet,
                               toLogStr)
 
+import Yesod
+import Yesod.Core.Types (loggerSet)
+import Yesod.Default.Config2 (makeYesodLogger)
+
 import Network.Wai (Middleware)
 import Network.Wai.Handler.Warp (run)
-import Network.Wai.Middleware.Cors
 import Network.Wai.Middleware.RequestLogger (RequestLoggerSettings(..),
-                                              Destination (..),
-                                              IPAddrSource (..),
-                                              OutputFormat (..),
-                                              destination,
-                                              mkRequestLogger,
-                                              outputFormat)
-       
+                                             Destination (..),
+                                             IPAddrSource (..),
+                                             OutputFormat (..),
+                                             destination,
+                                             mkRequestLogger,
+                                             outputFormat)
+import Network.HTTP.Client.Conduit (Manager, newManager)
+
 --
 -- Internal imports
 --
-import Heat.Model (migrateAll)
 import Heat.Settings (defaultSettings, AppSettings(..))
 import Heat.Middleware (corsified)
 import Heat.Foundation (App(..),
                         Route(..),                        
                         resourcesApp,                        
                         getApiR)
+import Heat.Model (migrateAll)
 
 --
 -- Our routes
 --
-import Heat.Authenticate (postAuthenticateR)
-import Heat.Handler.User (putUserR, getUserR, getUserCrudR, postUserCrudR, deleteUserCrudR)
+import Heat.Handler.Authenticate (postAuthenticateR)
+import Heat.Handler.User (putUserR,
+                          getUserR,
+                          getUserCrudR,
+                          postUserCrudR,
+                          deleteUserCrudR)
 
 --
 -- The dispatcher

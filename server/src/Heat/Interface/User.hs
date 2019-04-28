@@ -31,7 +31,6 @@ import Data.HexString
 -- Heat imports
 --
 import Heat.Data.Conversions
-import Heat.Data.UserInfo (UserInfo (..))
 import Heat.Data.Role (UserRole(..))
 import Heat.Model
 
