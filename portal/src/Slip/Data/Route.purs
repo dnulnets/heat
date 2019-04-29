@@ -9,7 +9,7 @@ module Slip.Data.Route (Page(..), router) where
 import Prelude
 import Control.Alt ((<|>))
 -- | Routing specifics
-import Routing.Match (Match, lit, num)
+import Routing.Match (Match, lit)
 
 -- | All possible routes
 data Page = Home |

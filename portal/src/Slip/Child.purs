@@ -7,7 +7,6 @@ module Slip.Child (Slot,
                    Message(..)) where
 
 -- | Language imports
-import Data.Maybe (Maybe)
 
 -- | Halogen imports
 import Halogen as H

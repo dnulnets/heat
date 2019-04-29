@@ -24,10 +24,13 @@ import Control.Monad.Reader (asks, runReaderT)
 import Control.Monad.Reader.Class (class MonadAsk)
 import Control.Monad.Reader.Trans (ReaderT)
 
+--
+-- Our own imports
+--
+import Slip.Interface.Authenticate (Token(..))
+
 -- | The application environment
-type Environment = { user ∷ Maybe String,
-                     token :: Ref (Maybe String)  
-                   }
+type Environment = { token :: Ref (Maybe Token) }
 
 -- | The application monad
 newtype ApplicationM a = ApplicationM (ReaderT Environment Aff a)

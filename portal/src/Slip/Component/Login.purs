@@ -13,13 +13,15 @@ import Data.Maybe (Maybe(..),
 import Data.Either (Either(..))
 
 import Data.Argonaut.Core (stringify)
-import Data.Argonaut (class EncodeJson, class DecodeJson, Json,
-                      encodeJson, fromArray, decodeJson,
-                      jsonEmptyObject, (~>), (~>?), (:=),
-                      (:=?), (.:), (.:?), (.!=))
+import Data.Argonaut (class DecodeJson, class EncodeJson, Json, decodeJson, encodeJson, jsonEmptyObject, (.:), (:=), (~>))
+
+import Control.Monad.Reader.Trans (class MonadAsk, asks)
+import Control.Monad.Trans.Class (lift)
 
 import Effect.Aff.Class (class MonadAff)
 import Effect.Console (log)
+import Effect.Ref (Ref)
+import Effect.Ref as Ref
 
 import Affjax as AX
 import Affjax.ResponseFormat as AXRF
@@ -36,6 +38,8 @@ import Halogen.HTML.Events as HE
 import Slip.Child as Child
 import Slip.Component.HTML.Utils (css, style)
 import Slip.Data.Alert as DAL
+import Slip.Interface.Authenticate (Token(..), Authenticate(..))
+import Slip.Data.Route (Page(..))
 
 -- | State for the component
 type State = { username∷Maybe String,
@@ -51,9 +55,9 @@ data Action = Submit
             | Input (State→State)
 
 -- | The component definition
-component ∷ ∀ q i m .
-            MonadAff m ⇒
-            H.Component HH.HTML q i Child.Message m
+component ∷ ∀ r q i m . MonadAff m
+            ⇒ MonadAsk { token ∷ Ref (Maybe Token) | r } m
+            ⇒ H.Component HH.HTML q i Child.Message m
 component =
   H.mkComponent
     { initialState
@@ -62,7 +66,8 @@ component =
     }
 
 -- | Render the alert
-render ∷ ∀ m . State → H.ComponentHTML Action () m
+render ∷ ∀ r m . MonadAff m
+         ⇒ State → H.ComponentHTML Action () m
 render state = HH.div
                [css "container", style "margin-top:20px"]
                [HH.div
@@ -99,29 +104,10 @@ render state = HH.div
                 ]
                ]
 
--- |The token returned after an authenticate is successful
-data Token = Token { token :: String }
-
-instance decodeJsonToken :: DecodeJson Token where
-  decodeJson json = do
-    obj <- decodeJson json
-    token <- obj .: "token"
-    pure $ Token { token }
-
--- |The authentication informaion needed to be able to authenticate the user and return a token
-data Authenticate = Authenticate { username :: String,
-                                   password :: String }
-
-instance encodeJsonPost :: EncodeJson Authenticate where
-  encodeJson (Authenticate auth)
-    = "username" := auth.username
-    ~> "password" := auth.password
-    ~> jsonEmptyObject
-            
 -- | Handles all actions for the login component
-handleAction ∷ ∀ m .
-               MonadAff m ⇒
-               Action → H.HalogenM State Action () Child.Message m Unit
+handleAction ∷ ∀ r m . MonadAff m
+               ⇒ MonadAsk { token ∷ Ref (Maybe Token) | r } m               
+               ⇒ Action → H.HalogenM State Action () Child.Message m Unit
 
 -- | Submit => Whenever the Login button is pressed, it will generate a submit message
 handleAction Submit = do
@@ -134,14 +120,18 @@ handleAction Submit = do
                                                   , password: fromMaybe "" state.password}))
 
   case result.body of
+    
     Left err -> do
       H.liftEffect $ log $ "POST /authenticate response failed to decode: " <> AX.printResponseFormatError err
-      H.raise (Child.Alert DAL.Error "Unable to login, invalid response from server")    
-    Right json -> do
+      H.raise (Child.Alert DAL.Error "Unable to login, invalid response from server")
+      
+    Right json -> do  
       case result.status of
         AXS.StatusCode 200 -> do
-          H.liftEffect $ log $ "POST /authenticate response: " <> stringify json
+          ref <- lift $ asks _.token          
+          H.liftEffect $ Ref.write (klapp json) ref
           H.raise (Child.Alert DAL.Info "Login succesful!")    
+          H.raise (Child.GotoPage Home)    
         otherwise -> do
           H.raise (Child.Alert DAL.Error "Unable to login, wrong username or password")
           

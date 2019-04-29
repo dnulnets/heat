@@ -76,6 +76,6 @@ main = HA.runHalogenAff do
   body ← HA.awaitBody
   let
     env ∷ Environment
-    env = { user : Nothing, token: currentToken }
+    env = { token : currentToken }
   io ← runUI (rootComponent env) unit body
   CR.runProcess (hashChangeProducer CR.$$ hashChangeConsumer io.query)  
