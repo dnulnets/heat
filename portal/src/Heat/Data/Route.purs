@@ -3,7 +3,7 @@
 -- |
 -- | Written by Tomas Stenlund, Sundsvall, Sweden (c) 2019
 -- |
-module Slip.Data.Route (Page(..), router) where
+module Heat.Data.Route (Page(..), router) where
 
 -- | Language specifics
 import Prelude

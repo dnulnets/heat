@@ -3,7 +3,7 @@
 -- |
 -- | Written by Tomas Stenlund, Sundsvall, Sweden (c) 2019
 -- |
-module Slip.Data.Alert (AlertType(..), Alert(..)) where
+module Heat.Data.Alert (AlertType(..), Alert(..)) where
 
 -- | Language specifics
 import Prelude

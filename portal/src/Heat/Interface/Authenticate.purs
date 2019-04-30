@@ -3,7 +3,7 @@
 -- |
 -- | Written by Tomas Stenlund, Sundsvall, Sweden (c) 2019
 -- |
-module Slip.Interface.Authenticate (Token(..)
+module Heat.Interface.Authenticate (Token(..)
                                    , Authenticate(..)) where
 
 -- | Language imports

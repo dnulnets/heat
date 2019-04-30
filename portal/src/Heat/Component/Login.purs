@@ -3,7 +3,7 @@
 -- |
 -- | Written by Tomas Stenlund, Sundsvall, Sweden (c) 2019
 -- |
-module Slip.Component.Login where
+module Heat.Component.Login where
 
 -- | Language imports
 import Prelude
@@ -35,11 +35,11 @@ import Halogen.HTML.Properties as HP
 import Halogen.HTML.Events as HE
 
 -- | Our own stuff
-import Slip.Child as Child
-import Slip.Component.HTML.Utils (css, style)
-import Slip.Data.Alert as DAL
-import Slip.Interface.Authenticate (Token(..), Authenticate(..))
-import Slip.Data.Route (Page(..))
+import Heat.Child as Child
+import Heat.Component.HTML.Utils (css, style)
+import Heat.Data.Alert as DAL
+import Heat.Interface.Authenticate (Token(..), Authenticate(..))
+import Heat.Data.Route (Page(..))
 
 -- | State for the component
 type State = { username∷Maybe String,

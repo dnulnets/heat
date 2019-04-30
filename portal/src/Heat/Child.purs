@@ -3,7 +3,7 @@
 -- |
 -- | Written by Tomas Stenlund, Sundsvall, Sweden (c) 2019
 -- |
-module Slip.Child (Slot,
+module Heat.Child (Slot,
                    Message(..)) where
 
 -- | Language imports
@@ -12,8 +12,8 @@ module Slip.Child (Slot,
 import Halogen as H
 
 -- | Our imports
-import Slip.Data.Route (Page)
-import Slip.Data.Alert (AlertType(..))
+import Heat.Data.Route (Page)
+import Heat.Data.Alert (AlertType(..))
 
 -- | Messages possible to send out from all main components in the root page
 data Message = GotoPage Page |           -- | Goto to the specified page

@@ -3,7 +3,7 @@
 -- |
 -- | Written by Tomas Stenlund, Sundsvall, Sweden (c) 2019
 -- |
-module Slip.Component.Alert where
+module Heat.Component.Alert where
 
 -- | Language imports
 import Prelude
@@ -16,8 +16,8 @@ import Halogen as H
 import Halogen.HTML as HH
 
 -- | Our own stuff
-import Slip.Component.HTML.Utils (css, style, maybeElem)
-import Slip.Data.Alert as AL
+import Heat.Component.HTML.Utils (css, style, maybeElem)
+import Heat.Data.Alert as AL
 
 -- | Input to the component, is an alert or nothing
 type Input = Maybe AL.Alert

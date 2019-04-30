@@ -1,9 +1,9 @@
 -- |
--- | The Slip Application Monad module
+-- | The Heat Application Monad module
 -- |
 -- | Written by Tomas Stenlund, Sundsvall, Sweden (c) 2019
 -- |
-module Slip(Environment,
+module Heat(Environment,
             runApplication,
             ApplicationM) where
 
@@ -27,7 +27,7 @@ import Control.Monad.Reader.Trans (ReaderT)
 --
 -- Our own imports
 --
-import Slip.Interface.Authenticate (Token(..))
+import Heat.Interface.Authenticate (Token(..))
 
 -- | The application environment
 type Environment = { token :: Ref (Maybe Token) }

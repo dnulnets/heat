@@ -3,7 +3,7 @@
 -- |
 -- | Written by Tomas Stenlund, Sundsvall, Sweden (c) 2019
 -- |
-module Slip.Root (component,
+module Heat.Root (component,
                   Query (..)) where
 
 -- | Language imports
@@ -24,17 +24,17 @@ import Effect.Ref (Ref)
 import Halogen as H
 import Halogen.HTML as HH
 
--- | Slip imports
-import Slip.Child as Child
-import Slip.Data.Route (Page(..))
-import Slip.Data.Alert as DAL
-import Slip.Component.HTML.Utils (css, style)
-import Slip.Component.Menu as Menu
-import Slip.Component.Alert as Alert
-import Slip.Component.Footer as Footer
-import Slip.Component.Login as Login
-import Slip.Component.Home as Home
-import Slip.Interface.Authenticate (Token(..))
+-- | Heat imports
+import Heat.Child as Child
+import Heat.Data.Route (Page(..))
+import Heat.Data.Alert as DAL
+import Heat.Component.HTML.Utils (css, style)
+import Heat.Component.Menu as Menu
+import Heat.Component.Alert as Alert
+import Heat.Component.Footer as Footer
+import Heat.Component.Login as Login
+import Heat.Component.Home as Home
+import Heat.Interface.Authenticate (Token(..))
 
 -- | The querys supported by the root page
 data Query a = GotoPage Page a
@@ -161,7 +161,6 @@ handleAction ( LoginMessage (Child.GotoPage url)) =
 -- | alert view.
 handleAction ( LoginMessage (Child.Alert alrt msg)) =
   do
-    H.liftEffect $ log "Alerting the user ..."
     state <- H.get
     H.put $ state { alert = Just $ DAL.Alert alrt msg }
 

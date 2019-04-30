@@ -1,9 +1,9 @@
 -- |
--- | The footer component
+-- | The home component
 -- |
 -- | Written by Tomas Stenlund, Sundsvall, Sweden (c) 2019
 -- |
-module Slip.Component.Footer where
+module Heat.Component.Home where
 
 -- | Language imports
 import Prelude
@@ -13,10 +13,7 @@ import Halogen as H
 import Halogen.HTML as HH
 
 -- | Our own stuff
-import Slip.Component.HTML.Utils (css)
-
--- | Slot type for the componet
-type Slot p = ∀ q . H.Slot q Void p
+import Heat.Component.HTML.Utils (css, style)
 
 -- | State for the component
 type State = { }
@@ -34,20 +31,20 @@ component =
     , eval: H.mkEval $ H.defaultEval
     }
 
--- | Render the alert
+-- | Render the homepage
 render ∷ ∀ a m. State → H.ComponentHTML a () m
 render state = HH.div
-               [css "text-center"]
-               [HH.p
-                []
-                [HH.a
-                 []
-                 [HH.text "SLIP Administration Portal"]
-                ],
-                HH.p
-                []
-                [HH.a
-                 []
-                 [HH.text "Tomas Stenlund, Sundsvall Sweden"]
+               [css "container", style "margin-top:20px"]
+               [HH.div
+                [css "row"]
+                [HH.div
+                 [css "col-md-12"]
+                 [HH.div
+                  [css "col-md-3 col-md-offset-1"]
+                  [HH.h2
+                   []
+                   [HH.text "Home page"]
+                  ]
+                 ]
                 ]
                ]

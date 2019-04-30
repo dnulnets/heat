@@ -1,7 +1,7 @@
 -- |
 -- | The HTML Utilities module
 -- |
-module Slip.Component.HTML.Utils where
+module Heat.Component.HTML.Utils where
 
 -- | Language imports
 import Prelude

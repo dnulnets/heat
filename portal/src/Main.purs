@@ -37,10 +37,10 @@ import Web.HTML.Window as Window
 -- | Routing imports
 import Routing.Hash (match)
 
--- | Slip imports
-import Slip (Environment, runApplication)
-import Slip.Root as Root
-import Slip.Data.Route (router, Page(..))
+-- | Heat imports
+import Heat (Environment, runApplication)
+import Heat.Root as Root
+import Heat.Data.Route (router, Page(..))
 
 -- | Produce events from the browser for route changes
 hashChangeProducer ∷ CR.Producer HCE.HashChangeEvent Aff Unit

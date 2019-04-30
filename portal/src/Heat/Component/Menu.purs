@@ -3,7 +3,7 @@
 -- |
 -- | Written by Tomas Stenlund, Sundsvall, Sweden (c) 2019
 -- |
-module Slip.Component.Menu where
+module Heat.Component.Menu where
 
 -- | Language imports
 import Prelude
@@ -19,7 +19,7 @@ import Halogen.HTML.Properties.ARIA as HPA
 import DOM.HTML.Indexed.ButtonType (ButtonType(..))
 
 -- | Our own stuff
-import Slip.Component.HTML.Utils (css, prop)
+import Heat.Component.HTML.Utils (css, prop)
 
 -- | Slot type for the menu
 type Slot p = ∀ q . H.Slot q Void p
@@ -47,7 +47,7 @@ render state =
   [css "navbar navbar-expand-md navbar-dark fixed-top bg-dark"]
   [HH.a
    [css "navbar-brand", HP.href "#home"]
-   [HH.text "SLIP Portal"],
+   [HH.text "Heat Portal"],
    HH.button
    [css "navbar-toggler", HP.type_ ButtonButton, HPA.controls "navbarCollapse", HPA.expanded "false",
     HPA.label "Toggle navigation", prop "data-toggle" "collapse", prop "data-target" "#navbarCollapse"]
