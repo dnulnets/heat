@@ -19,6 +19,7 @@ import Effect.Aff (Aff)
 import Effect.Aff.Class (class MonadAff)
 import Effect.Class (class MonadEffect)
 import Effect.Ref (Ref)
+import Effect.Ref as Ref
 
 import Type.Equality (class TypeEquals, from)
 
@@ -37,9 +38,11 @@ import Halogen as H
 -- Our own imports
 --
 import Heat.Interface.Authenticate (Token, class ManageAuthentication)
+import Heat.Utils.REST (BaseURL)
 
 -- | The application environment
-type Environment = { token :: Ref (Maybe Token) }
+type Environment = { baseURL ∷ BaseURL,
+                     token ∷ Ref (Maybe Token) }
 
 -- | The application monad
 newtype ApplicationM a = ApplicationM (ReaderT Environment Aff a)
@@ -61,22 +64,31 @@ derive newtype instance monadAffApplication ∷ MonadAff ApplicationM
 -- | ask implementation
 instance monadAskApplication ∷ TypeEquals e Environment ⇒ MonadAsk e ApplicationM where
   ask = ApplicationM $ asks from
-
---  Add the manage user class
+  
+--
+--  Add the set of functions that handles login and logout of a user
+--
 instance manageAuthenticationApplicationM :: ManageAuthentication ApplicationM where
 
   -- |Tries to login the user and get a token from the backend that can be used for future
   -- calls
   login auth = do
+    ref <- asks _.token
     result <- H.liftAff $ AX.post AXRF.json "http://localhost:3000/authenticate"
               (AXRB.json (encodeJson $ auth))
-    case result.body of    
-      Left err -> do
-        pure $ Nothing      
-      Right json -> do  
+    token <- pure $ case result.body of
+      Left err -> Nothing
+      Right json -> do
         case result.status of
-          AXS.StatusCode 200 -> do
-            pure $ hush $ decodeJson json
+          AXS.StatusCode 200 -> do            
+            hush $ decodeJson json
           otherwise -> do
-            pure $ Nothing            
+            Nothing
+    H.liftEffect $ Ref.write token ref
+    pure token
 
+  -- |Logs out the user
+  logout = do
+    ref <- asks _.token
+    H.liftEffect $ Ref.write Nothing ref
+    

@@ -11,13 +11,11 @@ import Prelude
 import Data.Maybe (Maybe(..),
                    fromMaybe)
 
-import Control.Monad.Reader.Trans (class MonadAsk, asks)
-import Control.Monad.Trans.Class (lift)
+import Control.Monad.Reader.Trans (class MonadAsk)
 
 import Effect.Aff.Class (class MonadAff)
 import Effect.Console (log)
 import Effect.Ref (Ref)
-import Effect.Ref as Ref
 
 -- | Halogen import
 import Halogen as H
@@ -109,8 +107,6 @@ handleAction Submit = do
   state <- H.get
   token <- login $ Authenticate { username: fromMaybe "" state.username
                                 , password: fromMaybe "" state.password}           
-  ref <- lift $ asks _.token
-  H.liftEffect $ Ref.write token ref
   case token of
     Nothing → do
       H.raise (Child.Alert DAL.Error "Login failed!")

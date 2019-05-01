@@ -5,7 +5,7 @@
 -- |
 module Heat.Interface.Authenticate (Token(..)
                                    , Authenticate(..)
-                                   , class ManageAuthentication, login) where
+                                   , class ManageAuthentication, login, logout) where
 
 -- Language imports
 import Prelude
@@ -45,8 +45,13 @@ class Monad m <= ManageAuthentication m where
   -- |Tries to log in and returns with a token if succesful
   login∷Authenticate     -- ^Authentication information
        →m (Maybe Token)  -- ^Token
+       
+  -- |Logs out the user
+  logout::m Unit
   
 -- |Avoid lift in the components
 instance manageAuthenticationHalogenM :: ManageAuthentication m => ManageAuthentication (HalogenM st act slots msg m) where
   login = lift <<< login
   
+  -- logout = pure unit
+  logout = lift logout

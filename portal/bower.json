@@ -16,7 +16,9 @@
     "purescript-affjax": "^9.0.0",
     "purescript-argonaut-core": "^5.0.0",
     "purescript-argonaut-codecs": "^6.0.1",
-    "purescript-argonaut": "^6.0.0"
+    "purescript-argonaut": "^6.0.0",
+    "purescript-generics-rep": "^6.1.1",
+    "purescript-routing-duplex": "^0.3.0"
   },
   "devDependencies": {
     "purescript-psci-support": "^4.0.0"
