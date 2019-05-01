@@ -10,10 +10,6 @@ import Prelude
 
 import Data.Maybe (Maybe(..),
                    fromMaybe)
-import Data.Either (Either(..))
-
-import Data.Argonaut.Core (stringify)
-import Data.Argonaut (class DecodeJson, class EncodeJson, Json, decodeJson, encodeJson, jsonEmptyObject, (.:), (:=), (~>))
 
 import Control.Monad.Reader.Trans (class MonadAsk, asks)
 import Control.Monad.Trans.Class (lift)
@@ -22,11 +18,6 @@ import Effect.Aff.Class (class MonadAff)
 import Effect.Console (log)
 import Effect.Ref (Ref)
 import Effect.Ref as Ref
-
-import Affjax as AX
-import Affjax.ResponseFormat as AXRF
-import Affjax.RequestBody as AXRB
-import Affjax.StatusCode as AXS
 
 -- | Halogen import
 import Halogen as H
@@ -38,7 +29,9 @@ import Halogen.HTML.Events as HE
 import Heat.Child as Child
 import Heat.Component.HTML.Utils (css, style)
 import Heat.Data.Alert as DAL
-import Heat.Interface.Authenticate (Token(..), Authenticate(..))
+import Heat.Interface.Authenticate (Token,
+                                    Authenticate(..),
+                                    class ManageAuthentication, login)
 import Heat.Data.Route (Page(..))
 
 -- | State for the component
@@ -56,6 +49,7 @@ data Action = Submit
 
 -- | The component definition
 component ∷ ∀ r q i m . MonadAff m
+            ⇒ ManageAuthentication m
             ⇒ MonadAsk { token ∷ Ref (Maybe Token) | r } m
             ⇒ H.Component HH.HTML q i Child.Message m
 component =
@@ -66,7 +60,7 @@ component =
     }
 
 -- | Render the alert
-render ∷ ∀ r m . MonadAff m
+render ∷ ∀ m . MonadAff m
          ⇒ State → H.ComponentHTML Action () m
 render state = HH.div
                [css "container", style "margin-top:20px"]
@@ -106,47 +100,27 @@ render state = HH.div
 
 -- | Handles all actions for the login component
 handleAction ∷ ∀ r m . MonadAff m
+               ⇒ ManageAuthentication m
                ⇒ MonadAsk { token ∷ Ref (Maybe Token) | r } m               
                ⇒ Action → H.HalogenM State Action () Child.Message m Unit
 
 -- | Submit => Whenever the Login button is pressed, it will generate a submit message
 handleAction Submit = do
-  
   state <- H.get
-
-  -- Try to authenticate us
-  result <- H.liftAff $ AX.post AXRF.json "http://localhost:3000/authenticate"
-            (AXRB.json (encodeJson $ Authenticate { username: fromMaybe "" state.username
-                                                  , password: fromMaybe "" state.password}))
-
-  case result.body of
-    
-    Left err -> do
-      H.liftEffect $ log $ "POST /authenticate response failed to decode: " <> AX.printResponseFormatError err
-      H.raise (Child.Alert DAL.Error "Unable to login, invalid response from server")
+  token <- login $ Authenticate { username: fromMaybe "" state.username
+                                , password: fromMaybe "" state.password}           
+  ref <- lift $ asks _.token
+  H.liftEffect $ Ref.write token ref
+  case token of
+    Nothing → do
+      H.raise (Child.Alert DAL.Error "Login failed!")
+    Just _ → do
+      H.raise (Child.GotoPage Home)    
+      H.raise (Child.Alert DAL.Info "Login successful!")    
       
-    Right json -> do  
-      case result.status of
-        AXS.StatusCode 200 -> do
-          ref <- lift $ asks _.token          
-          H.liftEffect $ Ref.write (klapp json) ref
-          H.raise (Child.Alert DAL.Info "Login succesful!")    
-          H.raise (Child.GotoPage Home)    
-        otherwise -> do
-          H.raise (Child.Alert DAL.Error "Unable to login, wrong username or password")
-          
-      H.liftEffect $ log $ "POST /authenticate response: " <> stringify json
-      H.liftEffect $ log $ "Result = " <> (show result.status)
-
 -- | Input f => Whenever the textbox entry is done, i.e. by leaving the box or pressing another control it generates a
 -- | Input f message, where f is the function that operatos on the state to save the new value.
 handleAction (Input f) = do
   H.liftEffect $ log $ "Setinput"
   state <- H.get
   H.put $ f state
-
-klapp::Json -> Maybe Token
-klapp j = case decodeJson j of
-  Left e -> Nothing
-  Right v ->  Just v
-    

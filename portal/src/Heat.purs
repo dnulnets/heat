@@ -11,12 +11,14 @@ module Heat(Environment,
 import Prelude
 
 import Data.Maybe (Maybe(..))
+import Data.Either (Either(..), hush)
+
+import Data.Argonaut (encodeJson, decodeJson, Json)
 
 import Effect.Aff (Aff)
 import Effect.Aff.Class (class MonadAff)
 import Effect.Class (class MonadEffect)
 import Effect.Ref (Ref)
-import Effect.Ref as Ref
 
 import Type.Equality (class TypeEquals, from)
 
@@ -24,10 +26,17 @@ import Control.Monad.Reader (asks, runReaderT)
 import Control.Monad.Reader.Class (class MonadAsk)
 import Control.Monad.Reader.Trans (ReaderT)
 
+import Affjax as AX
+import Affjax.ResponseFormat as AXRF
+import Affjax.RequestBody as AXRB
+import Affjax.StatusCode as AXS
+
+import Halogen as H
+
 --
 -- Our own imports
 --
-import Heat.Interface.Authenticate (Token(..))
+import Heat.Interface.Authenticate (Token(..), class ManageAuthentication)
 
 -- | The application environment
 type Environment = { token :: Ref (Maybe Token) }
@@ -52,3 +61,22 @@ derive newtype instance monadAffApplication ∷ MonadAff ApplicationM
 -- | ask implementation
 instance monadAskApplication ∷ TypeEquals e Environment ⇒ MonadAsk e ApplicationM where
   ask = ApplicationM $ asks from
+
+--  Add the manage user class
+instance manageAuthenticationApplicationM :: ManageAuthentication ApplicationM where
+
+  -- |Tries to login the user and get a token from the backend that can be used for future
+  -- calls
+  login auth = do
+    result <- H.liftAff $ AX.post AXRF.json "http://localhost:3000/authenticate"
+              (AXRB.json (encodeJson $ auth))
+    case result.body of    
+      Left err -> do
+        pure $ Nothing      
+      Right json -> do  
+        case result.status of
+          AXS.StatusCode 200 -> do
+            pure $ hush $ decodeJson json
+          otherwise -> do
+            pure $ Nothing            
+

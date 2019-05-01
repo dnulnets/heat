@@ -6,25 +6,23 @@
 module Heat.Root (component,
                   Query (..)) where
 
--- | Language imports
+-- Language imports
 import Prelude
 
 import Data.Maybe (Maybe(..))
 import Data.Symbol (SProxy(..))
 
-import Control.Monad.Reader.Trans (class MonadAsk, asks)
-import Control.Monad.Trans.Class (lift)
+import Control.Monad.Reader.Trans (class MonadAsk)
 
 import Effect.Aff.Class (class MonadAff)
 import Effect.Console (log)
 import Effect.Ref (Ref)
--- import Effect.Ref as Ref
 
--- | Halogen imports
+-- Halogen imports
 import Halogen as H
 import Halogen.HTML as HH
 
--- | Heat imports
+-- Heat imports
 import Heat.Child as Child
 import Heat.Data.Route (Page(..))
 import Heat.Data.Alert as DAL
@@ -34,7 +32,7 @@ import Heat.Component.Alert as Alert
 import Heat.Component.Footer as Footer
 import Heat.Component.Login as Login
 import Heat.Component.Home as Home
-import Heat.Interface.Authenticate (Token(..))
+import Heat.Interface.Authenticate (Token, class ManageAuthentication)
 
 -- | The querys supported by the root page
 data Query a = GotoPage Page a
@@ -61,8 +59,8 @@ _footer = SProxy::SProxy "footer"
 _main = SProxy::SProxy "main"
 
 -- | The root component definition
-component :: ∀ i o r m .
-             MonadAff m
+component :: ∀ i o r m . MonadAff m
+             ⇒ ManageAuthentication m
              ⇒ MonadAsk { token ∷ Ref (Maybe Token) | r } m
              ⇒ H.Component HH.HTML Query i o m
 component =
@@ -81,6 +79,7 @@ initialState _ = { user: Nothing,
 
 -- | Render the root application, it contains a menu, alert data, main page view and a footer
 render ∷ ∀ m r. MonadAff m
+         ⇒ ManageAuthentication m
          ⇒ MonadAsk { token ∷ Ref (Maybe Token) | r } m
          ⇒ State → H.ComponentHTML Action ChildSlots m
 render state = HH.div
@@ -102,6 +101,7 @@ render state = HH.div
 
 -- | Render the main view of the page
 view ∷ ∀ r m. MonadAff m
+       ⇒ ManageAuthentication m
        ⇒ MonadAsk { token ∷ Ref (Maybe Token) | r } m
        ⇒ Page → H.ComponentHTML Action ChildSlots m
 view Login = HH.slot _main "login" Login.component unit (Just <<< LoginMessage)

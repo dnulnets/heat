@@ -4,17 +4,20 @@
 -- | Written by Tomas Stenlund, Sundsvall, Sweden (c) 2019
 -- |
 module Heat.Interface.Authenticate (Token(..)
-                                   , Authenticate(..)) where
+                                   , Authenticate(..)
+                                   , class ManageAuthentication, login) where
 
--- | Language imports
+-- Language imports
 import Prelude
 
-import Data.Maybe (Maybe(..),
-                   fromMaybe)
-import Data.Either (Either(..))
+import Data.Maybe (Maybe)
+-- import Data.Either (Either(..))
 
 import Data.Argonaut.Core (stringify)
 import Data.Argonaut (class DecodeJson, class EncodeJson, Json, decodeJson, encodeJson, jsonEmptyObject, (.:), (:=), (~>))
+
+-- Halogen imports
+import Halogen (HalogenM, lift)
 
 -- |The token returned after an authenticate is successful
 data Token = Token { userid :: String,
@@ -37,3 +40,14 @@ instance encodeJsonPost :: EncodeJson Authenticate where
     ~> "password" := auth.password
     ~> jsonEmptyObject
             
+-- |The class for authentication
+class Monad m <= ManageAuthentication m where
+
+  -- |Tries to log in and returns with a token if succesful
+  login∷Authenticate     -- ^Authentication information
+       →m (Maybe Token)  -- ^Token
+  
+-- |Avoid lift in the components
+instance manageAuthenticationHalogenM :: ManageAuthentication m => ManageAuthentication (HalogenM st act slots msg m) where
+  login = lift <<< login
+  
