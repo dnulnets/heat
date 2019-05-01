@@ -5,9 +5,6 @@
 -- |
 module Heat.Data.Alert (AlertType(..), Alert(..)) where
 
--- | Language specifics
-import Prelude
-
 -- | The possible alerts
 data AlertType = Info | Warning | Error | Success
 

@@ -13,8 +13,7 @@ import Prelude
 import Data.Maybe (Maybe)
 -- import Data.Either (Either(..))
 
-import Data.Argonaut.Core (stringify)
-import Data.Argonaut (class DecodeJson, class EncodeJson, Json, decodeJson, encodeJson, jsonEmptyObject, (.:), (:=), (~>))
+import Data.Argonaut (class DecodeJson, class EncodeJson, decodeJson, jsonEmptyObject, (.:), (:=), (~>))
 
 -- Halogen imports
 import Halogen (HalogenM, lift)

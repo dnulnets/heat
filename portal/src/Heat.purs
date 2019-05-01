@@ -13,7 +13,7 @@ import Prelude
 import Data.Maybe (Maybe(..))
 import Data.Either (Either(..), hush)
 
-import Data.Argonaut (encodeJson, decodeJson, Json)
+import Data.Argonaut (encodeJson, decodeJson)
 
 import Effect.Aff (Aff)
 import Effect.Aff.Class (class MonadAff)
@@ -36,7 +36,7 @@ import Halogen as H
 --
 -- Our own imports
 --
-import Heat.Interface.Authenticate (Token(..), class ManageAuthentication)
+import Heat.Interface.Authenticate (Token, class ManageAuthentication)
 
 -- | The application environment
 type Environment = { token :: Ref (Maybe Token) }

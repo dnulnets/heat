@@ -13,7 +13,7 @@ import Halogen as H
 
 -- | Our imports
 import Heat.Data.Route (Page)
-import Heat.Data.Alert (AlertType(..))
+import Heat.Data.Alert (AlertType)
 
 -- | Messages possible to send out from all main components in the root page
 data Message = GotoPage Page |           -- | Goto to the specified page
