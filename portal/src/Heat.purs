@@ -12,6 +12,7 @@ import Prelude
 
 import Data.Maybe (Maybe(..))
 import Data.Either (Either(..), hush)
+import Data.Tuple (Tuple(..))
 
 import Data.Argonaut (encodeJson, decodeJson)
 
@@ -20,6 +21,7 @@ import Effect.Aff.Class (class MonadAff)
 import Effect.Class (class MonadEffect)
 import Effect.Ref (Ref)
 import Effect.Ref as Ref
+import Effect.Console (log)
 
 import Type.Equality (class TypeEquals, from)
 
@@ -38,7 +40,8 @@ import Halogen as H
 -- Our own imports
 --
 import Heat.Interface.Authenticate (Token, class ManageAuthentication)
-import Heat.Utils.REST (BaseURL)
+import Heat.Utils.Request (BaseURL, mkRequest, mkAuthRequest, RequestMethod (..))
+import Heat.Interface.Endpoint as EP
 
 -- | The application environment
 type Environment = { baseURL ∷ BaseURL,
@@ -74,16 +77,7 @@ instance manageAuthenticationApplicationM :: ManageAuthentication ApplicationM w
   -- calls
   login auth = do
     ref <- asks _.token
-    result <- H.liftAff $ AX.post AXRF.json "http://localhost:3000/authenticate"
-              (AXRB.json (encodeJson $ auth))
-    token <- pure $ case result.body of
-      Left err -> Nothing
-      Right json -> do
-        case result.status of
-          AXS.StatusCode 200 -> do            
-            hush $ decodeJson json
-          otherwise -> do
-            Nothing
+    (Tuple status token)::(Tuple AXS.StatusCode (Maybe Token)) <- mkAuthRequest EP.Authenticate (Post (Just auth))
     H.liftEffect $ Ref.write token ref
     pure token
 

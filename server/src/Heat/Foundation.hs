@@ -20,7 +20,7 @@ module Heat.Foundation (Handler,
                         App(..),
                         resourcesApp,
                         Route (..),
-                        getApiR) where
+                        getApiR, maybeAuthId) where
 
 --
 -- External imports
@@ -98,6 +98,7 @@ instance YesodAuth App where
   -- |Check the JSON Web token and return with the user identity if it is valid
   maybeAuthId = do
     bearer <- lookupBearerAuth
+    liftIO $ print bearer
     seconds <- liftIO $ fromIntegral . systemSeconds <$> getSystemTime    
     secret <- tokenSecret . appSettings <$> getYesod
     return $ case bearer of

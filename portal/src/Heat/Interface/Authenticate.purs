@@ -22,6 +22,9 @@ import Halogen (HalogenM, lift)
 data Token = Token { userid :: String,
                      token :: String }
 
+instance showToken :: Show Token where
+  show (Token t) = "Token " <> t.userid <> " " <> t.token
+
 instance decodeJsonToken :: DecodeJson Token where
   decodeJson json = do
     obj <- decodeJson json

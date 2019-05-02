@@ -33,7 +33,7 @@ import Heat.Model
 -- Heat imports
 --
 import Heat.Settings (AppSettings(..))
-import Heat.Foundation (appSettings, Handler)
+import Heat.Foundation (appSettings, Handler, maybeAuthId)
 import Heat.Utils.JWT (jsonToToken)
 import Heat.Data.Conversions (keyToHex)
 import Heat.Utils.Password (authHashPassword, authValidatePassword)
@@ -43,6 +43,8 @@ import Heat.Interface.Authenticate (Authenticate(..), Token (..))
 -- for following calls
 postAuthenticateR :: Handler Value
 postAuthenticateR = do
+  authId <- maybeAuthId
+  liftIO $ print $ authId
   auth <- requireCheckJsonBody :: Handler Authenticate
   dbuser <- runDB $ getBy $ UniqueUserUsername $ username auth
   seconds <- liftIO $ fromIntegral . systemSeconds <$> getSystemTime

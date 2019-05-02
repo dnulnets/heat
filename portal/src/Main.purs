@@ -41,7 +41,7 @@ import Routing.Hash (match)
 import Heat (Environment, runApplication)
 import Heat.Root as Root
 import Heat.Data.Route (router, Page(..))
-import Heat.Utils.REST (BaseURL(..))
+import Heat.Utils.Request (BaseURL(..))
 
 -- | Produce events from the browser for route changes
 hashChangeProducer ∷ CR.Producer HCE.HashChangeEvent Aff Unit
@@ -77,7 +77,7 @@ main = HA.runHalogenAff do
   body ← HA.awaitBody
   let
     env ∷ Environment
-    env = { baseURL : BaseURL "http://localhost:8080",
+    env = { baseURL : BaseURL "http://localhost:3000",
             token : currentToken }
   io ← runUI (rootComponent env) unit body
   CR.runProcess (hashChangeProducer CR.$$ hashChangeConsumer io.query)  
