@@ -8,6 +8,7 @@ module Heat.Data.Route (Page(..), router) where
 -- | Language specifics
 import Prelude
 import Control.Alt ((<|>))
+
 -- | Routing specifics
 import Routing.Match (Match, lit)
 
@@ -15,11 +16,6 @@ import Routing.Match (Match, lit)
 data Page = Home |
             Login |
             Error
-
-instance showPage :: Show Page where
-   show Home = "Home"
-   show Login = "Login"
-   show Error = "Error"
    
 -- | Routing function that creates data types based on the URL, we only deal with home and login pages
 router :: Match Page

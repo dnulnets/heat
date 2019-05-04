@@ -23,13 +23,17 @@ import Halogen.HTML as HH
 import Halogen.HTML.Properties as HP
 import Halogen.HTML.Events as HE
 
+import Web.Event.Event (Event)
+import Web.Event.Event as Event
+
 -- | Our own stuff
-import Heat.Child as Child
+import Heat.Data.Alert as HTAL
+import Heat.Child as HTC
 import Heat.Component.HTML.Utils (css, style)
-import Heat.Data.Alert as DAL
 import Heat.Interface.Authenticate (Token,
                                     Authenticate(..),
-                                    class ManageAuthentication, login)
+                                    class ManageAuthentication,
+                                    login)
 import Heat.Data.Route (Page(..))
 
 -- | State for the component
@@ -42,14 +46,14 @@ initialState _ = { username : Nothing,
                    password : Nothing }
 
 -- | Internal form actions
-data Action = Submit
+data Action = Submit Event
             | Input (State→State)
 
 -- | The component definition
 component ∷ ∀ r q i m . MonadAff m
             ⇒ ManageAuthentication m
             ⇒ MonadAsk { token ∷ Ref (Maybe Token) | r } m
-            ⇒ H.Component HH.HTML q i Child.Message m
+            ⇒ H.Component HH.HTML q i HTC.Message m
 component =
   H.mkComponent
     { initialState
@@ -72,12 +76,12 @@ render state = HH.div
                    []
                    [HH.text "Login"],
                    HH.form
-                   []
+                   [HE.onSubmit (Just <<< Submit)]
                    [HH.fieldset
                     [css "form-group"]
                     [HH.label [HP.for "username"][HH.text "Username"],
                      HH.input [css "form-control", HP.name "username", HP.type_ HP.InputText,
-                               HE.onValueChange \v -> Just $ Input (\st -> st { username = Just v })]
+                               HE.onValueChange \v -> Just $ Input (\st -> st { username = Just v})]
                     ],
                     HH.fieldset
                     [css "form-group"]
@@ -87,8 +91,7 @@ render state = HH.div
                     ],
                     HH.fieldset
                     [css "form-group"]
-                    [HH.button [css "btn btn-primary", HP.type_ HP.ButtonButton,
-                                HE.onClick \e -> Just $ Submit] [HH.text "Login"]
+                    [HH.button [css "btn btn-primary", HP.type_ HP.ButtonSubmit] [HH.text "Login"]
                     ]
                    ]
                   ]
@@ -100,23 +103,24 @@ render state = HH.div
 handleAction ∷ ∀ r m . MonadAff m
                ⇒ ManageAuthentication m
                ⇒ MonadAsk { token ∷ Ref (Maybe Token) | r } m               
-               ⇒ Action → H.HalogenM State Action () Child.Message m Unit
+               ⇒ Action → H.HalogenM State Action () HTC.Message m Unit
 
 -- | Submit => Whenever the Login button is pressed, it will generate a submit message
-handleAction Submit = do
+handleAction (Submit event) = do
+  H.liftEffect $ Event.preventDefault event
   state <- H.get
   token <- login $ Authenticate { username: fromMaybe "" state.username
                                 , password: fromMaybe "" state.password}           
   case token of
     Nothing → do
-      H.raise (Child.Alert DAL.Error "Login failed!")
+      H.raise (HTC.Alert HTAL.Error "Login failed!")
     Just _ → do
-      H.raise (Child.GotoPage Home)    
-      H.raise (Child.Alert DAL.Info "Login successful!")    
+      H.raise (HTC.GotoPage Home)    
+      H.raise (HTC.Alert HTAL.Info "Login successful!")    
       
 -- | Input f => Whenever the textbox entry is done, i.e. by leaving the box or pressing another control it generates a
--- | Input f message, where f is the function that operatos on the state to save the new value.
+-- | Input f message, where f is the function that operates on the state to save the new value. It is here we should
+-- | perhaps check for format of the input etc.
 handleAction (Input f) = do
-  H.liftEffect $ log $ "Setinput"
-  state <- H.get
-  H.put $ f state
+  H.modify_ f
+

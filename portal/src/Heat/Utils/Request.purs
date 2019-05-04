@@ -9,17 +9,22 @@ module Heat.Utils.Request where
 import Prelude
 
 import Data.Maybe (Maybe(..))
-import Data.Either (Either(..), hush)
+import Data.Either (Either(..),
+                    hush)
 import Data.Tuple (Tuple(..))
 import Data.HTTP.Method (Method(..))
 
-import Data.Argonaut (Json, class DecodeJson, decodeJson, class EncodeJson, encodeJson)
+import Data.Argonaut (Json,
+                      class DecodeJson,
+                      decodeJson,
+                      class EncodeJson,
+                      encodeJson)
 
-import Control.Monad.Reader (asks, ask)
+import Control.Monad.Reader (asks)
 import Control.Monad.Reader.Class (class MonadAsk)
 
-import Effect.Aff.Class (class MonadAff, liftAff)
-import Effect.Console (log)
+import Effect.Aff.Class (class MonadAff,
+                         liftAff)
 import Effect.Class (liftEffect)
 import Effect.Ref (Ref)
 import Effect.Ref as Ref
@@ -60,9 +65,9 @@ defaultRequest ∷ ∀ a. EncodeJson a ⇒ BaseURL
                → RequestMethod a
                → Maybe Authorization
                → AX.Request Json
-defaultRequest (BaseURL baseUrl) endpoint method auth =
+defaultRequest (BaseURL baseUrl) ep reqm auth =
   { method: Left method
-  , url: baseUrl <> print endpointCodec endpoint
+  , url: baseUrl <> print endpointCodec ep
   , headers: case auth of
       Nothing -> []
       Just (Bearer t) -> [ AXRH.RequestHeader "Authorization" $ "Bearer " <> t ]
@@ -73,7 +78,7 @@ defaultRequest (BaseURL baseUrl) endpoint method auth =
   , responseFormat: AXRF.json
   }
   where
-    Tuple method body = case method of
+    Tuple method body = case reqm of
       Get -> Tuple GET Nothing
       Post b -> Tuple POST b
       Put b -> Tuple PUT b
@@ -82,11 +87,11 @@ defaultRequest (BaseURL baseUrl) endpoint method auth =
 -- |Makes a request to the backend and return with status and result
 mkRequest ∷ ∀ a m r v. MonadAff m
             ⇒ MonadAsk { baseURL :: BaseURL | r } m
-  ⇒ DecodeJson v
-  ⇒ EncodeJson a
-  ⇒ Endpoint
-  → RequestMethod a
-  → m (Tuple AXS.StatusCode (Maybe v))
+            ⇒ DecodeJson v
+            ⇒ EncodeJson a
+            ⇒ Endpoint
+            → RequestMethod a
+            → m (Tuple AXS.StatusCode (Maybe v))
 mkRequest ep rm = do
   baseURL <- asks _.baseURL
   response <- liftAff $ AX.request $ defaultRequest baseURL ep rm Nothing 
@@ -105,21 +110,37 @@ mkRequest_ ep rm = do
   response <- liftAff $ AX.request $ defaultRequest baseURL ep rm Nothing
   pure response.status
 
+-- |Converts a Token to an Authorization
+mkAuthorization::Maybe Token->Maybe Authorization
+mkAuthorization (Just (Token t)) = Just (Bearer t.token)
+mkAuthorization _ = Nothing
+
 -- |Makes a request to the backend and return with status and result
 mkAuthRequest ∷ ∀ a m r v. MonadAff m
             ⇒ MonadAsk { baseURL :: BaseURL, token :: Ref (Maybe Token) | r } m
-  ⇒ DecodeJson v
-  ⇒ EncodeJson a
-  ⇒ Endpoint
-  → RequestMethod a
-  → m (Tuple AXS.StatusCode (Maybe v))
+            ⇒ DecodeJson v
+            ⇒ EncodeJson a
+            ⇒ Endpoint
+            → RequestMethod a
+            → m (Tuple AXS.StatusCode (Maybe v))
 mkAuthRequest ep rm = do
   ref <- asks _.token
   baseURL <- asks _.baseURL
-  userinfo <- liftEffect $ Ref.read ref
-  token <- pure $ case userinfo of
-    Just (Token t) -> Just (Bearer t.token)
-    Nothing -> Nothing
-  response <- liftAff $ AX.request $ defaultRequest baseURL ep rm token
+  userInfo <- liftEffect $ Ref.read ref
+  response <- liftAff $ AX.request $ defaultRequest baseURL ep rm $ mkAuthorization userInfo
   pure $ Tuple response.status $ join $ hush <$> decodeJson <$> hush response.body
 
+-- |Makes a request to the backend and return with status and ignore result
+mkAuthRequest_ ∷ ∀ a m r v. MonadAff m
+            ⇒ MonadAsk { baseURL :: BaseURL, token :: Ref (Maybe Token) | r } m
+            ⇒ DecodeJson v
+            ⇒ EncodeJson a
+            ⇒ Endpoint
+            → RequestMethod a
+            → m AXS.StatusCode
+mkAuthRequest_ ep rm = do
+  ref <- asks _.token
+  baseURL <- asks _.baseURL
+  userInfo <- liftEffect $ Ref.read ref
+  response <- liftAff $ AX.request $ defaultRequest baseURL ep rm $ mkAuthorization userInfo
+  pure $ response.status

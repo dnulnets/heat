@@ -11,17 +11,17 @@ module Heat(Environment,
 import Prelude
 
 import Data.Maybe (Maybe(..))
-import Data.Either (Either(..), hush)
+-- import Data.Either (Either(..), hush)
 import Data.Tuple (Tuple(..))
 
-import Data.Argonaut (encodeJson, decodeJson)
+-- import Data.Argonaut (encodeJson, decodeJson)
 
 import Effect.Aff (Aff)
 import Effect.Aff.Class (class MonadAff)
 import Effect.Class (class MonadEffect)
 import Effect.Ref (Ref)
-import Effect.Ref as Ref
-import Effect.Console (log)
+import Effect.Ref as REF
+-- import Effect.Console (log)
 
 import Type.Equality (class TypeEquals, from)
 
@@ -29,18 +29,21 @@ import Control.Monad.Reader (asks, runReaderT)
 import Control.Monad.Reader.Class (class MonadAsk)
 import Control.Monad.Reader.Trans (ReaderT)
 
-import Affjax as AX
-import Affjax.ResponseFormat as AXRF
-import Affjax.RequestBody as AXRB
-import Affjax.StatusCode as AXS
+-- import Affjax as AX
+-- import Affjax.ResponseFormat as AXRF
+-- import Affjax.RequestBody as AXRB
+-- import Affjax.StatusCode as AXS
 
 import Halogen as H
 
 --
 -- Our own imports
 --
-import Heat.Interface.Authenticate (Token, class ManageAuthentication)
-import Heat.Utils.Request (BaseURL, mkRequest, mkAuthRequest, RequestMethod (..))
+import Heat.Interface.Authenticate (Token,
+                                    class ManageAuthentication)
+import Heat.Utils.Request (BaseURL,
+                           mkRequest,
+                           RequestMethod (..))
 import Heat.Interface.Endpoint as EP
 
 -- | The application environment
@@ -77,12 +80,12 @@ instance manageAuthenticationApplicationM :: ManageAuthentication ApplicationM w
   -- calls
   login auth = do
     ref <- asks _.token
-    (Tuple status token)::(Tuple AXS.StatusCode (Maybe Token)) <- mkAuthRequest EP.Authenticate (Post (Just auth))
-    H.liftEffect $ Ref.write token ref
+    (Tuple _ token) <- mkRequest EP.Authenticate (Post (Just auth))
+    H.liftEffect $ REF.write token ref
     pure token
 
   -- |Logs out the user
   logout = do
     ref <- asks _.token
-    H.liftEffect $ Ref.write Nothing ref
+    H.liftEffect $ REF.write Nothing ref
     
