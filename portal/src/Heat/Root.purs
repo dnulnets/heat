@@ -32,7 +32,8 @@ import Heat.Component.Alert as Alert
 import Heat.Component.Footer as Footer
 import Heat.Component.Login as Login
 import Heat.Component.Home as Home
-import Heat.Interface.Authenticate (Token, class ManageAuthentication)
+import Heat.Interface.Authenticate (UserInfo,
+                                    class ManageAuthentication)
 
 -- | The querys supported by the root page
 data Query a = GotoPage Page a
@@ -61,7 +62,7 @@ _main = SProxy::SProxy "main"
 -- | The root component definition
 component :: ∀ i o r m . MonadAff m
              ⇒ ManageAuthentication m
-             ⇒ MonadAsk { token ∷ Ref (Maybe Token) | r } m
+             ⇒ MonadAsk { userInfo ∷ Ref (Maybe UserInfo) | r } m
              ⇒ H.Component HH.HTML Query i o m
 component =
   H.mkComponent
@@ -80,7 +81,7 @@ initialState _ = { user: Nothing,
 -- | Render the root application, it contains a menu, alert data, main page view and a footer
 render ∷ ∀ m r. MonadAff m
          ⇒ ManageAuthentication m
-         ⇒ MonadAsk { token ∷ Ref (Maybe Token) | r } m
+         ⇒ MonadAsk { userInfo ∷ Ref (Maybe UserInfo) | r } m
          ⇒ State → H.ComponentHTML Action ChildSlots m
 render state = HH.div
                [css "container"]
@@ -102,7 +103,7 @@ render state = HH.div
 -- | Render the main view of the page
 view ∷ ∀ r m. MonadAff m
        ⇒ ManageAuthentication m
-       ⇒ MonadAsk { token ∷ Ref (Maybe Token) | r } m
+       ⇒ MonadAsk { userInfo ∷ Ref (Maybe UserInfo) | r } m
        ⇒ Page → H.ComponentHTML Action ChildSlots m
 view Login = HH.slot _main "login" Login.component unit (Just <<< LoginMessage)
 view Home = HH.slot _main "home" Home.component unit (Just <<< HomeMessage)
@@ -125,7 +126,7 @@ view _ = HH.div
 -- | Handle the queries sent to the root page
 handleQuery ∷ ∀ r o m a .
               MonadAff m ⇒ 
-              MonadAsk { token ∷ Ref (Maybe Token) | r } m ⇒ 
+              MonadAsk { userInfo ∷ Ref (Maybe UserInfo) | r } m ⇒ 
               Query a → H.HalogenM State Action ChildSlots o m (Maybe a)
 handleQuery = case _ of
   GotoPage page a → do
@@ -136,7 +137,7 @@ handleQuery = case _ of
 -- | Handle the actions within the root page
 handleAction ∷ ∀ r o m .
                 MonadAff m ⇒
-                MonadAsk { token :: Ref (Maybe Token) | r } m ⇒
+                MonadAsk { userInfo :: Ref (Maybe UserInfo) | r } m ⇒
                 Action → H.HalogenM State Action ChildSlots o m Unit
 
 -- | Sets the user that has logged in

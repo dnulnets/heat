@@ -90,8 +90,13 @@ postUserCrudR :: Text     -- ^The user identity
 postUserCrudR uid = do
   
   user <- requireCheckJsonBody :: Handler UpdateUser
+  appset <- appSettings <$> getYesod
+  hpwd <- case upassword user of
+    Just pwd -> liftIO $ Just <$> authHashPassword (passwordCost appset) pwd
+    Nothing  -> pure $ Nothing
   runDB $ update (toKey uid) $
     changeField UserUsername (uusername user) <>
+    changeField UserPassword (decodeUtf8 <$> hpwd) <>
     changeField UserRole (urole user) <>
     changeField UserLevel (ulevel user) <>
     changeField UserEmail (uemail user)

@@ -63,6 +63,7 @@ $(deriveJSON defaultOptions {
 -- |User body description, comes with the CRUD operations
 data UpdateUser = UpdateUser
   { uusername :: Maybe Text   -- ^The username of the user
+  , upassword :: Maybe Text    -- ^The password for the user
   , urole :: Maybe UserRole   -- ^The role of the user
   , ulevel :: Maybe Int       -- ^The level of the user within its role
   , uemail :: Maybe Text      -- ^The email address to the user

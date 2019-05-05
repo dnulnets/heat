@@ -14,7 +14,6 @@ import Data.Maybe (Maybe(..),
 import Control.Monad.Reader.Trans (class MonadAsk)
 
 import Effect.Aff.Class (class MonadAff)
-import Effect.Console (log)
 import Effect.Ref (Ref)
 
 -- | Halogen import
@@ -30,7 +29,7 @@ import Web.Event.Event as Event
 import Heat.Data.Alert as HTAL
 import Heat.Child as HTC
 import Heat.Component.HTML.Utils (css, style)
-import Heat.Interface.Authenticate (Token,
+import Heat.Interface.Authenticate (UserInfo,
                                     Authenticate(..),
                                     class ManageAuthentication,
                                     login)
@@ -52,7 +51,7 @@ data Action = Submit Event
 -- | The component definition
 component ∷ ∀ r q i m . MonadAff m
             ⇒ ManageAuthentication m
-            ⇒ MonadAsk { token ∷ Ref (Maybe Token) | r } m
+            ⇒ MonadAsk { userInfo ∷ Ref (Maybe UserInfo) | r } m
             ⇒ H.Component HH.HTML q i HTC.Message m
 component =
   H.mkComponent
@@ -102,16 +101,16 @@ render state = HH.div
 -- | Handles all actions for the login component
 handleAction ∷ ∀ r m . MonadAff m
                ⇒ ManageAuthentication m
-               ⇒ MonadAsk { token ∷ Ref (Maybe Token) | r } m               
+               ⇒ MonadAsk { userInfo ∷ Ref (Maybe UserInfo) | r } m               
                ⇒ Action → H.HalogenM State Action () HTC.Message m Unit
 
 -- | Submit => Whenever the Login button is pressed, it will generate a submit message
 handleAction (Submit event) = do
   H.liftEffect $ Event.preventDefault event
   state <- H.get
-  token <- login $ Authenticate { username: fromMaybe "" state.username
-                                , password: fromMaybe "" state.password}           
-  case token of
+  userInfo <- login $ Authenticate { username: fromMaybe "" state.username
+                                   , password: fromMaybe "" state.password}           
+  case userInfo of
     Nothing → do
       H.raise (HTC.Alert HTAL.Error "Login failed!")
     Just _ → do

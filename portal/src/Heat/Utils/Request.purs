@@ -28,6 +28,7 @@ import Effect.Aff.Class (class MonadAff,
 import Effect.Class (liftEffect)
 import Effect.Ref (Ref)
 import Effect.Ref as Ref
+import Effect.Console (log)
 
 import Affjax as AX
 import Affjax.ResponseFormat as AXRF
@@ -42,12 +43,12 @@ import Routing.Duplex (print)
 --
 import Heat.Interface.Endpoint (Endpoint,
                                 endpointCodec)
-import Heat.Interface.Authenticate (Token(..))
+import Heat.Interface.Authenticate (UserInfo(..))
 
 -- |The type for "Authorization: Bearer <token>"
 newtype Authorization = Bearer String
-derive instance eqToken :: Eq Authorization
-derive instance ordToken :: Ord Authorization
+derive instance eqAuthorization :: Eq Authorization
+derive instance ordAuthorization :: Ord Authorization
 
 -- |The request type
 data RequestMethod a
@@ -91,11 +92,13 @@ mkRequest ∷ ∀ a m r v. MonadAff m
             ⇒ EncodeJson a
             ⇒ Endpoint
             → RequestMethod a
-            → m (Tuple AXS.StatusCode (Maybe v))
+            → m (Either String (Tuple AXS.StatusCode v))
 mkRequest ep rm = do
   baseURL <- asks _.baseURL
-  response <- liftAff $ AX.request $ defaultRequest baseURL ep rm Nothing 
-  pure $ Tuple response.status $ join $ hush <$> decodeJson <$> hush response.body
+  response <- liftAff $ AX.request $ defaultRequest baseURL ep rm Nothing
+  pure case response.body of
+    Left err → Left $ AXRF.printResponseFormatError err -- Make a string out of affjax errors
+    Right val → (Tuple response.status) <$> (decodeJson val)
 
 -- |Makes a request to the backend and return with status
 mkRequest_ ∷ ∀ a m r v. MonadAff m
@@ -104,27 +107,29 @@ mkRequest_ ∷ ∀ a m r v. MonadAff m
             ⇒ EncodeJson a
             ⇒ Endpoint
             → RequestMethod a
-            → m AXS.StatusCode
+            → m (Either String AXS.StatusCode)
 mkRequest_ ep rm = do
   baseURL <- asks _.baseURL
   response <- liftAff $ AX.request $ defaultRequest baseURL ep rm Nothing
-  pure response.status
+  pure case response.body of
+    Left err -> Left $ AXRF.printResponseFormatError err
+    Right _ -> Right response.status
 
--- |Converts a Token to an Authorization
-mkAuthorization::Maybe Token->Maybe Authorization
-mkAuthorization (Just (Token t)) = Just (Bearer t.token)
+-- |Converts a UserInfo to an Authorization
+mkAuthorization::Maybe UserInfo->Maybe Authorization
+mkAuthorization (Just (UserInfo t)) = Just (Bearer t.token)
 mkAuthorization _ = Nothing
 
 -- |Makes a request to the backend and return with status and result
 mkAuthRequest ∷ ∀ a m r v. MonadAff m
-            ⇒ MonadAsk { baseURL :: BaseURL, token :: Ref (Maybe Token) | r } m
+            ⇒ MonadAsk { baseURL :: BaseURL, userInfo :: Ref (Maybe UserInfo) | r } m
             ⇒ DecodeJson v
             ⇒ EncodeJson a
             ⇒ Endpoint
             → RequestMethod a
             → m (Tuple AXS.StatusCode (Maybe v))
 mkAuthRequest ep rm = do
-  ref <- asks _.token
+  ref <- asks _.userInfo
   baseURL <- asks _.baseURL
   userInfo <- liftEffect $ Ref.read ref
   response <- liftAff $ AX.request $ defaultRequest baseURL ep rm $ mkAuthorization userInfo
@@ -132,14 +137,14 @@ mkAuthRequest ep rm = do
 
 -- |Makes a request to the backend and return with status and ignore result
 mkAuthRequest_ ∷ ∀ a m r v. MonadAff m
-            ⇒ MonadAsk { baseURL :: BaseURL, token :: Ref (Maybe Token) | r } m
+            ⇒ MonadAsk { baseURL :: BaseURL, userInfo :: Ref (Maybe UserInfo) | r } m
             ⇒ DecodeJson v
             ⇒ EncodeJson a
             ⇒ Endpoint
             → RequestMethod a
             → m AXS.StatusCode
 mkAuthRequest_ ep rm = do
-  ref <- asks _.token
+  ref <- asks _.userInfo
   baseURL <- asks _.baseURL
   userInfo <- liftEffect $ Ref.read ref
   response <- liftAff $ AX.request $ defaultRequest baseURL ep rm $ mkAuthorization userInfo

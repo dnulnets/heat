@@ -13,7 +13,7 @@
 -- 
 -- This module contains the interfaces for the user handler API
 module Heat.Interface.Authenticate (Authenticate(..),
-                                    Token(..)) where
+                                    UserInfo(..)) where
 
 --
 -- External imports
@@ -41,9 +41,16 @@ data Authenticate = Authenticate
 instance FromJSON Authenticate
 
 -- |The JSON Web token returned after authentication, response to the POST
-data Token = Token
-             { userid :: HexString   -- ^Unique user identity
-             , token :: Text         -- ^The JSON Web token
+data UserInfo = UserInfo
+             { iuserid :: HexString   -- ^Unique user identity
+             , itoken :: Text         -- ^The JSON Web token
+             , iusername :: Text      -- ^The username
+             , irole :: UserRole       -- ^The role of the user
+             , ilevel :: Int          -- ^The level of the user           
+             , iemail :: Text         -- ^Email address to the user
              } deriving (Generic, Show)
 
-instance ToJSON Token
+$(deriveJSON defaultOptions {
+     fieldLabelModifier = drop 1 -- Get rid of the first character in the field names
+     } ''UserInfo)
+

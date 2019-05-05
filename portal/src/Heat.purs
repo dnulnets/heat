@@ -11,7 +11,7 @@ module Heat(Environment,
 import Prelude
 
 import Data.Maybe (Maybe(..))
--- import Data.Either (Either(..), hush)
+import Data.Either (Either(..))
 import Data.Tuple (Tuple(..))
 
 -- import Data.Argonaut (encodeJson, decodeJson)
@@ -21,7 +21,7 @@ import Effect.Aff.Class (class MonadAff)
 import Effect.Class (class MonadEffect)
 import Effect.Ref (Ref)
 import Effect.Ref as REF
--- import Effect.Console (log)
+import Effect.Console (log)
 
 import Type.Equality (class TypeEquals, from)
 
@@ -39,7 +39,7 @@ import Halogen as H
 --
 -- Our own imports
 --
-import Heat.Interface.Authenticate (Token,
+import Heat.Interface.Authenticate (UserInfo,
                                     class ManageAuthentication)
 import Heat.Utils.Request (BaseURL,
                            mkRequest,
@@ -48,7 +48,7 @@ import Heat.Interface.Endpoint as EP
 
 -- | The application environment
 type Environment = { baseURL ∷ BaseURL,
-                     token ∷ Ref (Maybe Token) }
+                     userInfo ∷ Ref (Maybe UserInfo) }
 
 -- | The application monad
 newtype ApplicationM a = ApplicationM (ReaderT Environment Aff a)
@@ -79,13 +79,18 @@ instance manageAuthenticationApplicationM :: ManageAuthentication ApplicationM w
   -- |Tries to login the user and get a token from the backend that can be used for future
   -- calls
   login auth = do
-    ref <- asks _.token
-    (Tuple _ token) <- mkRequest EP.Authenticate (Post (Just auth))
-    H.liftEffect $ REF.write token ref
-    pure token
+    ref <- asks _.userInfo
+    response <- mkRequest EP.Authenticate (Post (Just auth))
+    case response of
+      Left err -> do
+        H.liftEffect $ log err
+        pure Nothing
+      Right (Tuple status userInfo) -> do
+        H.liftEffect $ REF.write userInfo ref
+        pure userInfo
 
   -- |Logs out the user
   logout = do
-    ref <- asks _.token
+    ref <- asks _.userInfo
     H.liftEffect $ REF.write Nothing ref
     

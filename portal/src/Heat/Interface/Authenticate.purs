@@ -3,7 +3,7 @@
 -- |
 -- | Written by Tomas Stenlund, Sundsvall, Sweden (c) 2019
 -- |
-module Heat.Interface.Authenticate (Token(..)
+module Heat.Interface.Authenticate (UserInfo(..)
                                    , Authenticate(..)
                                    , class ManageAuthentication, login, logout) where
 
@@ -21,16 +21,27 @@ import Data.Argonaut (class DecodeJson,
 -- Halogen imports
 import Halogen (HalogenM, lift)
 
--- |The token returned after an authenticate is successful
-data Token = Token { userid ∷ String,
-                     token ∷ String }
+-- Heat imports
+import Heat.Data.Role (UserRole)
 
-instance decodeJsonToken :: DecodeJson Token where
+-- |The token returned after an authenticate is successful
+data UserInfo = UserInfo { userid ∷ String,
+                           token ∷ String,
+                           username ∷ String,
+                           role ∷ UserRole,
+                           level ∷ Int,
+                           email ∷ String }
+
+instance decodeJsonUserInfo :: DecodeJson UserInfo where
   decodeJson json = do
     obj ← decodeJson json
     userid ← obj .: "userid"
     token ← obj .: "token"
-    pure $ Token { userid, token }
+    username ← obj .: "username"
+    role ← obj .: "role"
+    level ← obj .: "level"
+    email ← obj .: "email"
+    pure $ UserInfo { userid, token, username, role, level, email }
 
 -- |The authentication informaion needed to be able to authenticate the user and return a token
 data Authenticate = Authenticate { username ∷ String,
@@ -47,7 +58,7 @@ class Monad m ⇐ ManageAuthentication m where
 
   -- |Tries to log in and returns with a token if succesful
   login∷Authenticate     -- ^Authentication information
-       →m (Maybe Token)  -- ^Token
+    →m (Maybe UserInfo)  -- ^UserInfo
        
   -- |Logs out the user
   logout∷m Unit

@@ -36,8 +36,9 @@ import Heat.Settings (AppSettings(..))
 import Heat.Foundation (appSettings, Handler, maybeAuthId)
 import Heat.Utils.JWT (jsonToToken)
 import Heat.Data.Conversions (keyToHex)
+import Heat.Data.Role (UserRole(..))
 import Heat.Utils.Password (authHashPassword, authValidatePassword)
-import Heat.Interface.Authenticate (Authenticate(..), Token (..))
+import Heat.Interface.Authenticate (Authenticate(..), UserInfo (..))
   
 -- |Authenticate the user and create a JSON Web Token that is returned so it can be used
 -- for following calls
@@ -54,5 +55,5 @@ postAuthenticateR = do
     in case dbuser of
          Just (Entity userId user) | authValidatePassword (userPassword user) (password auth) -> do
                                        token <- return $ jsonToToken secret seconds length $ toJSON userId
-                                       returnJson $ Token (keyToHex userId) token
+                                       returnJson $ UserInfo (keyToHex userId) token "uname" Simple 0 "tomas@stenlund.cc"
          _ -> notAuthenticated

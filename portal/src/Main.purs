@@ -73,11 +73,11 @@ rootComponent env = hoist (runApplication env) Root.component
 -- | The main function
 main ∷ Effect Unit
 main = HA.runHalogenAff do
-  currentToken <- liftEffect $ Ref.new Nothing
+  currentUserInfo <- liftEffect $ Ref.new Nothing
   body ← HA.awaitBody
   let
     env ∷ Environment
     env = { baseURL : BaseURL "http://localhost:3000",
-            token : currentToken }
+            userInfo : currentUserInfo }
   io ← runUI (rootComponent env) unit body
   CR.runProcess (hashChangeProducer CR.$$ hashChangeConsumer io.query)  

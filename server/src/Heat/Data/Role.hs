@@ -18,14 +18,28 @@ module Heat.Data.Role where
 --
 import GHC.Generics
 import Database.Persist.TH
-import Data.Aeson (ToJSON, FromJSON)
+import Data.Char (toLower)
+import Data.Aeson (ToJSON(..), FromJSON(..), object, pairs, (.:), Options(..), genericParseJSON,
+                   defaultOptions, genericToJSON, genericToEncoding)
 
 -- |Role of a user
 data UserRole = Simple
               | Administrator
               | Device
               deriving (Generic, Show, Read, Eq)
-instance ToJSON UserRole
-instance FromJSON UserRole
+
+customOptions = defaultOptions
+                { constructorTagModifier = map toLower
+                }
+
+instance ToJSON UserRole where
+    toJSON     = genericToJSON customOptions
+    toEncoding = genericToEncoding customOptions
+    
+instance FromJSON UserRole where
+    parseJSON = genericParseJSON customOptions
+    
+-- instance ToJSON UserRole
+-- instance FromJSON UserRole
 derivePersistField "UserRole"
 
