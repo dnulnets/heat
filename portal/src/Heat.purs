@@ -85,7 +85,7 @@ instance manageAuthenticationApplicationM :: ManageAuthentication ApplicationM w
       Left err -> do
         H.liftEffect $ log err
         pure Nothing
-      Right (Tuple status userInfo) -> do
+      Right (Tuple _ userInfo) -> do
         H.liftEffect $ REF.write userInfo ref
         pure userInfo
 
