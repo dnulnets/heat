@@ -6,8 +6,6 @@
 module Heat.Utils.Data (maybeFail) where
 
 -- Language imports
-import Prelude
-
 import Data.Maybe (Maybe(..))
 import Data.Either(Either(..))
 

@@ -28,7 +28,6 @@ import Effect.Aff.Class (class MonadAff,
 import Effect.Class (liftEffect)
 import Effect.Ref (Ref)
 import Effect.Ref as Ref
-import Effect.Console (log)
 
 import Affjax as AX
 import Affjax.ResponseFormat as AXRF

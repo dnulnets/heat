@@ -8,17 +8,12 @@ module Heat.Data.Role (UserRole(..)) where
 -- Language imports
 import Prelude
 
-import Data.Maybe (Maybe(..))
 import Data.Either(Either(..))
 
 import Data.Argonaut (fromString,
                       toString,
                       class DecodeJson,
-                      class EncodeJson,
-                      decodeJson, jsonEmptyObject,
-                      (.:),
-                      (:=),
-                      (~>))
+                      class EncodeJson)
 
 -- Heat imports
 import Heat.Utils.Data (maybeFail)

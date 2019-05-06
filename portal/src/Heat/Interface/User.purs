@@ -19,8 +19,6 @@ import Data.Argonaut (class DecodeJson,
                       (~>),
                       (~>?))
 
-import Control.Apply (lift2)
-
 -- Halogen imports
 import Halogen (HalogenM, lift)
 

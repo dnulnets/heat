@@ -6,10 +6,9 @@
 module Heat.Data.UserInfo (UserInfo(..)) where
 
 -- Language import
-import Prelude
 
 -- Import Heat modules
-import Heat.Data.Role (UserRole(..))
+import Heat.Data.Role (UserRole)
 
 -- |The user type for the logged in user
 data UserInfo = UserInfo {
