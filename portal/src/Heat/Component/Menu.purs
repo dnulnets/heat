@@ -9,6 +9,11 @@ module Heat.Component.Menu where
 import Prelude
 import Data.Maybe (Maybe(..))
 
+import Control.Monad.Reader.Trans (class MonadAsk)
+
+import Effect.Aff.Class (class MonadAff)
+import Effect.Ref (Ref)
+
 -- | Halogen import
 import Halogen as H
 import Halogen.HTML as HH
@@ -20,19 +25,28 @@ import DOM.HTML.Indexed.ButtonType (ButtonType(..))
 
 -- | Our own stuff
 import Heat.Component.HTML.Utils (css, prop)
+import Heat.Interface.Authenticate as HIA
+import Heat.Data.Role (UserRole(..))
 
 -- | Slot type for the menu
 type Slot p = ∀ q . H.Slot q Void p
 
--- | State for the meny, we have a user so far
-type State = { user ∷ Maybe String }
+-- | State for the menu, we have a user so far
+data UserInfo = UserInfo { username∷ String,
+                           role∷ UserRole,
+                           level∷ Int
+                         }
+                
+type State = { user ∷ Maybe UserInfo }
 
 -- | Initial state is no logged in user
 initialState ∷ ∀ i. i -> State
 initialState _ = { user: Nothing }
 
 -- | The component definition
-component :: forall q i o m. H.Component HH.HTML q i o m
+component :: ∀ r q i o m. MonadAff m
+             ⇒ MonadAsk { userInfo ∷ Ref (Maybe HIA.UserInfo) | r } m
+             ⇒ H.Component HH.HTML q i o m
 component =
   H.mkComponent
     { initialState
@@ -41,7 +55,8 @@ component =
     }
 
 -- | Render the menu
-render ∷ ∀ a m. State → H.ComponentHTML a () m
+render ∷ ∀ a m. MonadAff m
+         ⇒ State → H.ComponentHTML a () m
 render state =
   HH.nav
   [css "navbar navbar-expand-md navbar-dark fixed-top bg-dark"]
@@ -75,7 +90,11 @@ render state =
       [css "nav-link", HP.href "#login/2178342/tomas"]
       [HH.text "Users"]
      ]    
-    ]
+    ],
+    HH.p
+    [css "navbar-text navbar-right"]
+    [HH.text "Signed in as Tomas"]
    ]  
   ]
-  
+
+--handleQuery∷forall a. query a -> HalogenM State action slots output m (Maybe a)

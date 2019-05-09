@@ -24,7 +24,7 @@ import Halogen (HalogenM, lift)
 -- Heat imports
 import Heat.Data.Role (UserRole)
 
--- |The token returned after an authenticate is successful
+-- |The user information returned after an authenticate is successful
 data UserInfo = UserInfo { userid ∷ String,
                            token ∷ String,
                            username ∷ String,

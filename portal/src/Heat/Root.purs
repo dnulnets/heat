@@ -23,7 +23,6 @@ import Halogen as H
 import Halogen.HTML as HH
 
 -- Heat imports
-import Heat.Child as Child
 import Heat.Data.Route (Page(..))
 import Heat.Data.Alert as DAL
 import Heat.Component.HTML.Utils (css, style)
@@ -39,10 +38,8 @@ import Heat.Interface.Authenticate (UserInfo,
 data Query a = GotoPage Page a
 
 -- | The actions supported by the root page
-data Action = -- SetUser |
-              LoginMessage Child.Message |
-              HomeMessage  Child.Message
-
+data Action = LoginMessage Login.Message
+              
 -- | The state for the application, it will contain the logged in user among other things
 type State = { user ∷ Maybe String,
                page ∷ Page,
@@ -52,12 +49,14 @@ type State = { user ∷ Maybe String,
 type ChildSlots = ( menu ∷ Menu.Slot Unit,
                     alert ∷ Alert.Slot Unit,
                     footer ∷ Footer.Slot Unit,
-                    main ∷ Child.Slot String)
+                    login ∷ Login.Slot Unit,
+                    home ∷ Home.Slot Unit)
                   
 _menu = SProxy::SProxy "menu"
 _alert = SProxy::SProxy "alert"
 _footer = SProxy::SProxy "footer"
-_main = SProxy::SProxy "main"
+_login = SProxy::SProxy "login"
+_home = SProxy::SProxy "home"
 
 -- | The root component definition
 component :: ∀ i o r m . MonadAff m
@@ -105,8 +104,8 @@ view ∷ ∀ r m. MonadAff m
        ⇒ ManageAuthentication m
        ⇒ MonadAsk { userInfo ∷ Ref (Maybe UserInfo) | r } m
        ⇒ Page → H.ComponentHTML Action ChildSlots m
-view Login = HH.slot _main "login" Login.component unit (Just <<< LoginMessage)
-view Home = HH.slot _main "home" Home.component unit (Just <<< HomeMessage)
+view Login = HH.slot _login unit Login.component unit (Just <<< LoginMessage)
+view Home = HH.slot _home unit Home.component unit absurd
 view _ = HH.div
              [css "container", style "margin-top:20px"]
              [HH.div
@@ -150,7 +149,7 @@ handleAction ∷ ∀ r o m .
 -- | Handles messages sent out from the Login view
 -- |
 -- | GotoPage url => Routes the root pages view to the new url
-handleAction ( LoginMessage (Child.GotoPage url)) =
+handleAction ( LoginMessage (Login.GotoPage url)) =
   do
     H.liftEffect $ log "Go to a new page"
     state <- H.get
@@ -160,7 +159,7 @@ handleAction ( LoginMessage (Child.GotoPage url)) =
 -- |
 -- | Alert level message  => Sets the alert message and level for the root page, to be renderd by the
 -- | alert view.
-handleAction ( LoginMessage (Child.Alert alrt msg)) =
+handleAction ( LoginMessage (Login.Alert alrt msg)) =
   do
     state <- H.get
     H.put $ state { alert = Just $ DAL.Alert alrt msg }

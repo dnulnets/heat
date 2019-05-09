@@ -29,11 +29,6 @@ import Control.Monad.Reader (asks, runReaderT)
 import Control.Monad.Reader.Class (class MonadAsk)
 import Control.Monad.Reader.Trans (ReaderT)
 
--- import Affjax as AX
--- import Affjax.ResponseFormat as AXRF
--- import Affjax.RequestBody as AXRB
--- import Affjax.StatusCode as AXS
-
 import Halogen as H
 
 --
@@ -81,15 +76,16 @@ instance manageAuthenticationApplicationM :: ManageAuthentication ApplicationM w
   login auth = do
     ref <- asks _.userInfo
     response <- mkRequest EP.Authenticate (Post (Just auth))
+    
     case response of
       Left err -> do
-        H.liftEffect $ log err
+        H.liftEffect $ log $ "Error:" <> err
         pure Nothing
       Right (Tuple _ userInfo) -> do
         H.liftEffect $ REF.write userInfo ref
         pure userInfo
 
-  -- |Logs out the user
+  -- |Log out the user
   logout = do
     ref <- asks _.userInfo
     H.liftEffect $ REF.write Nothing ref

@@ -27,13 +27,19 @@ import Web.Event.Event as Event
 
 -- | Our own stuff
 import Heat.Data.Alert as HTAL
-import Heat.Child as HTC
 import Heat.Component.HTML.Utils (css, style)
 import Heat.Interface.Authenticate (UserInfo,
                                     Authenticate(..),
                                     class ManageAuthentication,
                                     login)
 import Heat.Data.Route (Page(..))
+
+-- | Messages possible to send out from the login component
+data Message = GotoPage Page |                -- | Goto to the specified page
+               Alert HTAL.AlertType String    -- | The component is alerting
+
+-- | Slot type for all the Login component
+type Slot p = ∀ q . H.Slot q Message p
 
 -- | State for the component
 type State = { username∷Maybe String,
@@ -52,7 +58,7 @@ data Action = Submit Event
 component ∷ ∀ r q i m . MonadAff m
             ⇒ ManageAuthentication m
             ⇒ MonadAsk { userInfo ∷ Ref (Maybe UserInfo) | r } m
-            ⇒ H.Component HH.HTML q i HTC.Message m
+            ⇒ H.Component HH.HTML q i Message m
 component =
   H.mkComponent
     { initialState
@@ -102,7 +108,7 @@ render state = HH.div
 handleAction ∷ ∀ r m . MonadAff m
                ⇒ ManageAuthentication m
                ⇒ MonadAsk { userInfo ∷ Ref (Maybe UserInfo) | r } m               
-               ⇒ Action → H.HalogenM State Action () HTC.Message m Unit
+               ⇒ Action → H.HalogenM State Action () Message m Unit
 
 -- | Submit => Whenever the Login button is pressed, it will generate a submit message
 handleAction (Submit event) = do
@@ -112,14 +118,13 @@ handleAction (Submit event) = do
                                    , password: fromMaybe "" state.password}           
   case userInfo of
     Nothing → do
-      H.raise (HTC.Alert HTAL.Error "Login failed!")
+      H.raise (Alert HTAL.Error "Login failed!")
     Just _ → do
-      H.raise (HTC.GotoPage Home)    
-      H.raise (HTC.Alert HTAL.Info "Login successful!")    
+      H.raise (GotoPage Home)    
+      H.raise (Alert HTAL.Info "Login successful!")    
       
 -- | Input f => Whenever the textbox entry is done, i.e. by leaving the box or pressing another control it generates a
 -- | Input f message, where f is the function that operates on the state to save the new value. It is here we should
 -- | perhaps check for format of the input etc.
 handleAction (Input f) = do
   H.modify_ f
-

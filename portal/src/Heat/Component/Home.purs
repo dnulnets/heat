@@ -15,6 +15,9 @@ import Halogen.HTML as HH
 -- | Our own stuff
 import Heat.Component.HTML.Utils (css, style)
 
+-- | Slot type for the hom ecomponent
+type Slot p = ∀ q . H.Slot q Void p
+
 -- | State for the component
 type State = { }
 
