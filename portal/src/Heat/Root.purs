@@ -31,7 +31,7 @@ import Heat.Component.Alert as Alert
 import Heat.Component.Footer as Footer
 import Heat.Component.Login as Login
 import Heat.Component.Home as Home
-import Heat.Interface.Authenticate (UserInfo,
+import Heat.Interface.Authenticate (UserInfo(..),
                                     class ManageAuthentication)
 
 -- | The querys supported by the root page
@@ -41,7 +41,7 @@ data Query a = GotoPage Page a
 data Action = LoginMessage Login.Message
               
 -- | The state for the application, it will contain the logged in user among other things
-type State = { user ∷ Maybe String,
+type State = { user ∷ Maybe UserInfo,
                page ∷ Page,
                alert ∷ Maybe DAL.Alert }
 
@@ -84,7 +84,7 @@ render ∷ ∀ m r. MonadAff m
          ⇒ State → H.ComponentHTML Action ChildSlots m
 render state = HH.div
                [css "container"]
-               [HH.slot _menu unit Menu.component unit absurd,
+               [HH.slot _menu unit Menu.component (userConv <$> state.user) absurd,
                 HH.div
                 [css "row"]
                 [HH.div
@@ -98,6 +98,9 @@ render state = HH.div
                 []
                 [HH.slot _footer unit Footer.component unit absurd]
                ]
+
+userConv∷UserInfo->Menu.UserInfo
+userConv (UserInfo u) = Menu.UserInfo { username : u.username, role : u.role, level : u.level }
 
 -- | Render the main view of the page
 view ∷ ∀ r m. MonadAff m
@@ -164,6 +167,11 @@ handleAction ( LoginMessage (Login.Alert alrt msg)) =
     state <- H.get
     H.put $ state { alert = Just $ DAL.Alert alrt msg }
 
+handleAction ( LoginMessage (Login.SetUser ui)) =
+  do
+    state <- H.get
+    H.put $ state { user = ui }
+  
 -- | Handles messages sent out from the Login view
 -- |
 -- | Catch all action

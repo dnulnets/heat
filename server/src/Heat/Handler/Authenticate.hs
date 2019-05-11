@@ -55,5 +55,5 @@ postAuthenticateR = do
     in case dbuser of
          Just (Entity userId user) | authValidatePassword (userPassword user) (password auth) -> do
                                        token <- return $ jsonToToken secret seconds length $ toJSON userId
-                                       returnJson $ UserInfo (keyToHex userId) token "uname" Simple 0 "tomas@stenlund.cc"
+                                       returnJson $ UserInfo (keyToHex userId) token (userUsername user) (userRole user) (userLevel user) (userEmail user)
          _ -> notAuthenticated

@@ -35,9 +35,10 @@ import Heat.Interface.Authenticate (UserInfo,
 import Heat.Data.Route (Page(..))
 
 -- | Messages possible to send out from the login component
-data Message = GotoPage Page |                -- | Goto to the specified page
-               Alert HTAL.AlertType String    -- | The component is alerting
-
+data Message = GotoPage Page                  -- | Goto to the specified page
+             | Alert HTAL.AlertType String    -- | The component is alerting
+             | SetUser (Maybe UserInfo)       -- | A login event
+               
 -- | Slot type for all the Login component
 type Slot p = ∀ q . H.Slot q Message p
 
@@ -118,9 +119,11 @@ handleAction (Submit event) = do
                                    , password: fromMaybe "" state.password}           
   case userInfo of
     Nothing → do
+      H.raise (SetUser Nothing)
       H.raise (Alert HTAL.Error "Login failed!")
-    Just _ → do
-      H.raise (GotoPage Home)    
+    Just u → do
+      H.raise (GotoPage Home)
+      H.raise (SetUser $ Just u)
       H.raise (Alert HTAL.Info "Login successful!")    
       
 -- | Input f => Whenever the textbox entry is done, i.e. by leaving the box or pressing another control it generates a

@@ -24,7 +24,7 @@ import Halogen.HTML.Properties.ARIA as HPA
 import DOM.HTML.Indexed.ButtonType (ButtonType(..))
 
 -- | Our own stuff
-import Heat.Component.HTML.Utils (css, prop)
+import Heat.Component.HTML.Utils (css, prop, maybeElem)
 import Heat.Interface.Authenticate as HIA
 import Heat.Data.Role (UserRole(..))
 
@@ -39,24 +39,26 @@ data UserInfo = UserInfo { username∷ String,
                 
 type State = { user ∷ Maybe UserInfo }
 
+-- |The internal actions
+data Action = SetUser (Maybe UserInfo)
+
 -- | Initial state is no logged in user
 initialState ∷ ∀ i. i -> State
 initialState _ = { user: Nothing }
 
 -- | The component definition
-component :: ∀ r q i o m. MonadAff m
-             ⇒ MonadAsk { userInfo ∷ Ref (Maybe HIA.UserInfo) | r } m
-             ⇒ H.Component HH.HTML q i o m
-component =
-  H.mkComponent
+component :: ∀ q o m. MonadAff m
+             ⇒ H.Component HH.HTML q (Maybe UserInfo) o m
+component = H.mkComponent
     { initialState
     , render
-    , eval: H.mkEval $ H.defaultEval
+    , eval: H.mkEval $ H.defaultEval { handleAction = handleAction,
+                                       receive = \v → Just $ SetUser v }
     }
 
 -- | Render the menu
-render ∷ ∀ a m. MonadAff m
-         ⇒ State → H.ComponentHTML a () m
+render ∷ ∀ m . MonadAff m
+         ⇒ State → H.ComponentHTML Action () m
 render state =
   HH.nav
   [css "navbar navbar-expand-md navbar-dark fixed-top bg-dark"]
@@ -93,8 +95,13 @@ render state =
     ],
     HH.p
     [css "navbar-text navbar-right"]
-    [HH.text "Signed in as Tomas"]
+    [ maybeElem state.user (\(UserInfo u) → HH.text $ "Signed in as " <> u.username) ]
    ]  
   ]
 
---handleQuery∷forall a. query a -> HalogenM State action slots output m (Maybe a)
+-- | Handles all actions for the login component
+handleAction ∷ ∀ o m . MonadAff m
+               ⇒ Action → H.HalogenM State Action () o m Unit
+handleAction (SetUser u) = do
+  state <- H.get
+  H.put $ state { user = u }
