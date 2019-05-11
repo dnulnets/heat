@@ -1,7 +1,12 @@
 -- |
 -- | The HTML Utilities module
 -- |
-module Heat.Component.HTML.Utils where
+module Heat.Component.HTML.Utils (css,
+                                  style,
+                                  prop,
+                                  maybeElem,
+                                  maybeOrElem,
+                                  whenElem) where
 
 -- | Language imports
 import Prelude
@@ -28,6 +33,11 @@ prop name = HP.attr (AttrName name)
 maybeElem :: forall p i a. Maybe a -> (a -> HH.HTML p i) -> HH.HTML p i
 maybeElem (Just x) f = f x
 maybeElem _ _ = HH.text ""
+
+-- | Render a fragment if the the value exists (Just), empty if not (Nothing)
+maybeOrElem :: forall p i a. Maybe a -> HH.HTML p i -> (a -> HH.HTML p i) -> HH.HTML p i
+maybeOrElem (Just x) _ f = f x
+maybeOrElem _ o _ = o
 
 -- | Render a fragment if the value is true, empty if not
 whenElem :: forall p i. Boolean -> (Unit -> HH.HTML p i) -> HH.HTML p i

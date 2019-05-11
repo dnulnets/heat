@@ -9,10 +9,7 @@ module Heat.Component.Menu where
 import Prelude
 import Data.Maybe (Maybe(..))
 
-import Control.Monad.Reader.Trans (class MonadAsk)
-
 import Effect.Aff.Class (class MonadAff)
-import Effect.Ref (Ref)
 
 -- | Halogen import
 import Halogen as H
@@ -24,9 +21,10 @@ import Halogen.HTML.Properties.ARIA as HPA
 import DOM.HTML.Indexed.ButtonType (ButtonType(..))
 
 -- | Our own stuff
-import Heat.Component.HTML.Utils (css, prop, maybeElem)
-import Heat.Interface.Authenticate as HIA
-import Heat.Data.Role (UserRole(..))
+import Heat.Component.HTML.Utils (css,
+                                  prop,
+                                  maybeOrElem)
+import Heat.Data.Role (UserRole)
 
 -- | Slot type for the menu
 type Slot p = ∀ q . H.Slot q Void p
@@ -40,7 +38,7 @@ data UserInfo = UserInfo { username∷ String,
 type State = { user ∷ Maybe UserInfo }
 
 -- |The internal actions
-data Action = SetUser (Maybe UserInfo)
+data Action = SetUser (Maybe UserInfo) -- ^Used for setting the user and displaying the correct menu choices
 
 -- | Initial state is no logged in user
 initialState ∷ ∀ i. i -> State
@@ -53,7 +51,7 @@ component = H.mkComponent
     { initialState
     , render
     , eval: H.mkEval $ H.defaultEval { handleAction = handleAction,
-                                       receive = \v → Just $ SetUser v }
+                                       receive = receive }
     }
 
 -- | Render the menu
@@ -95,13 +93,19 @@ render state =
     ],
     HH.p
     [css "navbar-text navbar-right"]
-    [ maybeElem state.user (\(UserInfo u) → HH.text $ "Signed in as " <> u.username) ]
+    [ maybeOrElem state.user (HH.text "Not logged in") \(UserInfo u) → HH.text $ "Logged in as " <> u.username ]
    ]  
   ]
 
--- | Handles all actions for the login component
+-- |Converts external input to internal actions for the component
+receive∷Maybe UserInfo->Maybe Action
+receive v = Just $ SetUser v
+
+-- | Handles all actions for the menu component
 handleAction ∷ ∀ o m . MonadAff m
                ⇒ Action → H.HalogenM State Action () o m Unit
+
+-- |SetUser UserInfo => Sets the user (username, role and level), to be used to be able to determine what menu choices to show
 handleAction (SetUser u) = do
   state <- H.get
   H.put $ state { user = u }

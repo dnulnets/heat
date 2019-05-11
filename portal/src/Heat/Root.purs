@@ -9,13 +9,12 @@ module Heat.Root (component,
 -- Language imports
 import Prelude
 
-import Data.Maybe (Maybe(..))
+import Data.Maybe (Maybe(..), maybe)
 import Data.Symbol (SProxy(..))
 
 import Control.Monad.Reader.Trans (class MonadAsk)
 
 import Effect.Aff.Class (class MonadAff)
-import Effect.Console (log)
 import Effect.Ref (Ref)
 
 -- Halogen imports
@@ -24,7 +23,7 @@ import Halogen.HTML as HH
 
 -- Heat imports
 import Heat.Data.Route (Page(..))
-import Heat.Data.Alert as DAL
+import Heat.Data.Alert as HDAL
 import Heat.Component.HTML.Utils (css, style)
 import Heat.Component.Menu as Menu
 import Heat.Component.Alert as Alert
@@ -43,7 +42,7 @@ data Action = LoginMessage Login.Message
 -- | The state for the application, it will contain the logged in user among other things
 type State = { user ∷ Maybe UserInfo,
                page ∷ Page,
-               alert ∷ Maybe DAL.Alert }
+               alert ∷ Maybe HDAL.Alert }
 
 -- | The set of slots for the root container
 type ChildSlots = ( menu ∷ Menu.Slot Unit,
@@ -142,22 +141,6 @@ handleAction ∷ ∀ r o m .
                 MonadAsk { userInfo :: Ref (Maybe UserInfo) | r } m ⇒
                 Action → H.HalogenM State Action ChildSlots o m Unit
 
--- | Sets the user that has logged in
---handleAction SetUser =
---  do
---    name <- lift $ asks _.user
---    state <- H.get
---    H.put $ state { user = name }
-
--- | Handles messages sent out from the Login view
--- |
--- | GotoPage url => Routes the root pages view to the new url
-handleAction ( LoginMessage (Login.GotoPage url)) =
-  do
-    H.liftEffect $ log "Go to a new page"
-    state <- H.get
-    H.put $ state { page = url, alert = Nothing }
-
 -- | Handles messages sent out from the Login view
 -- |
 -- | Alert level message  => Sets the alert message and level for the root page, to be renderd by the
@@ -165,22 +148,11 @@ handleAction ( LoginMessage (Login.GotoPage url)) =
 handleAction ( LoginMessage (Login.Alert alrt msg)) =
   do
     state <- H.get
-    H.put $ state { alert = Just $ DAL.Alert alrt msg }
+    H.put $ state { alert = Just $ HDAL.Alert alrt msg }
 
+-- | SetUser userinfo => Sets the logged in user and redirect to landing page
 handleAction ( LoginMessage (Login.SetUser ui)) =
   do
     state <- H.get
-    H.put $ state { user = ui }
-  
--- | Handles messages sent out from the Login view
--- |
--- | Catch all action
-handleAction _ =
-  do
-    H.liftEffect $ log "Unhandled action"
-    
---
--- Scratch area
---
--- How to send a request
--- void $ H.query _alert unit (H.tell (Alert.Alert alrt msg))
+    H.put $ state { user = ui, page = maybe Login (\_->Home) ui }
+

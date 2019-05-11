@@ -26,17 +26,15 @@ import Web.Event.Event (Event)
 import Web.Event.Event as Event
 
 -- | Our own stuff
-import Heat.Data.Alert as HTAL
+import Heat.Data.Alert as HDAL
 import Heat.Component.HTML.Utils (css, style)
 import Heat.Interface.Authenticate (UserInfo,
                                     Authenticate(..),
                                     class ManageAuthentication,
                                     login)
-import Heat.Data.Route (Page(..))
 
 -- | Messages possible to send out from the login component
-data Message = GotoPage Page                  -- | Goto to the specified page
-             | Alert HTAL.AlertType String    -- | The component is alerting
+data Message = Alert HDAL.AlertType String    -- | The component is alerting
              | SetUser (Maybe UserInfo)       -- | A login event
                
 -- | Slot type for all the Login component
@@ -120,11 +118,10 @@ handleAction (Submit event) = do
   case userInfo of
     Nothing → do
       H.raise (SetUser Nothing)
-      H.raise (Alert HTAL.Error "Login failed!")
+      H.raise (Alert HDAL.Error "Login failed!")
     Just u → do
-      H.raise (GotoPage Home)
       H.raise (SetUser $ Just u)
-      H.raise (Alert HTAL.Info "Login successful!")    
+      H.raise (Alert HDAL.Info "Login successful!")
       
 -- | Input f => Whenever the textbox entry is done, i.e. by leaving the box or pressing another control it generates a
 -- | Input f message, where f is the function that operates on the state to save the new value. It is here we should
