@@ -30,7 +30,8 @@ import Heat.Data.Route (Page(..))
 
 -- |The internal actions
 data Action = SetUser (Maybe UserInfo) -- ^Used for setting the user and displaying the correct menu choices
-            | Select Page              -- ^Menu selection
+            | MenuLogout                   -- ^Menu selection
+            | MenuLogin                    -- ^Menu selection
 
 -- |The outgoing messages
 data Message = GotoPage Page           -- ^Redirect to a page
@@ -86,25 +87,35 @@ navbarHeader header = HH.div [css "navbar-header"] [ HH.a [css "navbar-brand", H
 -- |The left navigation bar
 navbarLeft∷forall p . HH.HTML p Action
 navbarLeft = HH.div [css "navbar-collapse collapse", HP.id_ "navbarCollapse"] [HH.ul [css "navbar-nav mr-auto"]
-                                                                       [ itemHome,
-                                                                         itemAbout]]
+                                                                       [ itemAbout,
+                                                                         itemUsers,
+                                                                         itemLogin]]
 
 -- |The right navigation bar
 navbarRight∷forall p . State -> HH.HTML p Action
 navbarRight state = HH.a [css "navbar-text",
-                    HE.onClick (\_->Just $ Select Login),
-                    HP.href "#/"] [HH.text $ maybe "Not logged in" (\(UserInfo u)->"Logged in as " <> u.username) state.user]
-  
-itemHome∷forall p . HH.HTML p Action
-itemHome = HH.li [css "nav-item active"] [HH.a
+                          HE.onClick (\_->Just $ (maybe MenuLogin (\_->MenuLogout) state.user)),
+                          HP.href $ "#" <> (maybe "login" (\_->"") state.user)]
+                    [HH.text $ maybe "Not logged in" (\(UserInfo u)->"Logged in as " <> u.username) state.user]
+
+itemUsers∷forall p i . HH.HTML p i
+itemUsers = HH.li [css "nav-item active"] [HH.a
                                           [css "nav-link",
-                                           HE.onClick (\_->Just $ Select Home),
-                                           HP.href "#/"]
-                                          [HH.text "Home"]]
+                                           HP.href "#users"]
+                                          [HH.text "Users"]]
 
 itemAbout∷forall p i . HH.HTML p i
-itemAbout = HH.li [css "nav-item"] [HH.a [css "nav-link", HP.href "#login"] [HH.text "Login"]]
-            
+itemAbout = HH.li [css "nav-item"] [HH.a [css "nav-link", HP.href "#about"] [HH.text "About"]]
+
+itemLogin∷forall p i . HH.HTML p i
+itemLogin = HH.li [css "nav-item"] [HH.a [css "nav-link", HP.href "#login"] [HH.text "Login"]]
+
+itemLogout∷forall p . HH.HTML p Action
+itemLogout = HH.li [css "nav-item"] [HH.a [css "nav-link",
+                                           HE.onClick (\_->Just $ MenuLogout),
+                                           HP.href "#"] [HH.text "Logout"]]
+
+
 -- |Converts external input to internal actions for the component
 receive∷Maybe UserInfo->Maybe Action
 receive v = Just $ SetUser v
@@ -118,6 +129,6 @@ handleAction (SetUser u) = do
   state <- H.get
   H.put $ state { user = u }
 
-handleAction (Select r) = do
+handleAction _ = do
   H.liftEffect $ log "Select done"
-  H.raise (GotoPage r)
+--  H.raise (GotoPage r)
