@@ -79,7 +79,7 @@ instance manageAuthenticationApplicationM :: ManageAuthentication ApplicationM w
     
     case response of
       Left err -> do
-        H.liftEffect $ log $ "Error:" <> err
+        H.liftEffect $ log $ "Error: " <> err
         H.liftEffect $ REF.write Nothing ref
         pure Nothing
       Right (Tuple _ userInfo) -> do

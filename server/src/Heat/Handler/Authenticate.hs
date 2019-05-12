@@ -17,12 +17,15 @@ module Heat.Handler.Authenticate (postAuthenticateR) where
 -- External imports
 --
 import GHC.Generics (Generic)
+
 import Data.Text (Text)
 import Data.Text.Encoding (encodeUtf8, decodeUtf8)
 import Data.HexString (HexString)
 import Data.ByteString (ByteString)
 import Data.Time.Clock.System (getSystemTime,
                                SystemTime(..))
+
+import Network.HTTP.Types.Status (status401)
 
 --
 -- Internal imports
@@ -44,8 +47,6 @@ import Heat.Interface.Authenticate (Authenticate(..), UserInfo (..))
 -- for following calls
 postAuthenticateR :: Handler Value
 postAuthenticateR = do
-  authId <- maybeAuthId
-  liftIO $ print $ authId
   auth <- requireCheckJsonBody :: Handler Authenticate
   dbuser <- runDB $ getBy $ UniqueUserUsername $ username auth
   seconds <- liftIO $ fromIntegral . systemSeconds <$> getSystemTime
@@ -56,4 +57,6 @@ postAuthenticateR = do
          Just (Entity userId user) | authValidatePassword (userPassword user) (password auth) -> do
                                        token <- return $ jsonToToken secret seconds length $ toJSON userId
                                        returnJson $ UserInfo (keyToHex userId) token (userUsername user) (userRole user) (userLevel user) (userEmail user)
-         _ -> notAuthenticated
+         _ -> do
+           sendResponseStatus status401 Null 
+

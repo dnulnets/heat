@@ -38,16 +38,6 @@ component =
 render ∷ ∀ a m. State → H.ComponentHTML a () m
 render state = HH.div
                [css "text-center"]
-               [HH.p
-                []
-                [HH.a
-                 []
-                 [HH.text "SLIP Administration Portal"]
-                ],
-                HH.p
-                []
-                [HH.a
-                 []
-                 [HH.text "Tomas Stenlund, Sundsvall Sweden"]
-                ]
+               [HH.p []
+                [HH.b [] [HH.text "HEAT Portal"], HH.br [], HH.text "Tomas Stenlund, Sundsvall, Sweden"]
                ]

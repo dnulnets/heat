@@ -16,6 +16,7 @@ import Control.Monad.Reader.Trans (class MonadAsk)
 
 import Effect.Aff.Class (class MonadAff)
 import Effect.Ref (Ref)
+import Effect.Console (log)
 
 -- Halogen imports
 import Halogen as H
@@ -24,7 +25,7 @@ import Halogen.HTML as HH
 -- Heat imports
 import Heat.Data.Route (Page(..))
 import Heat.Data.Alert as HDAL
-import Heat.Component.HTML.Utils (css, style)
+import Heat.Component.HTML.Utils (css, style, prop)
 import Heat.Component.Menu as Menu
 import Heat.Component.Alert as Alert
 import Heat.Component.Footer as Footer
@@ -38,6 +39,7 @@ data Query a = GotoPage Page a
 
 -- | The actions supported by the root page
 data Action = LoginMessage Login.Message
+            | MenuMessage Menu.Message
               
 -- | The state for the application, it will contain the logged in user among other things
 type State = { user ∷ Maybe UserInfo,
@@ -82,16 +84,16 @@ render ∷ ∀ m r. MonadAff m
          ⇒ MonadAsk { userInfo ∷ Ref (Maybe UserInfo) | r } m
          ⇒ State → H.ComponentHTML Action ChildSlots m
 render state = HH.div
-               [css "container"]
-               [HH.slot _menu unit Menu.component (userConv <$> state.user) absurd,
+               []
+               [HH.slot _menu unit Menu.component (userConv <$> state.user) (Just <<< MenuMessage),
                 HH.div
-                [css "row"]
+                [css "container"]
                 [HH.div
                  [css "col-md-12"]
                  [HH.slot _alert unit Alert.component state.alert absurd]
                 ],
                 HH.main
-                [ ]
+                [css "container", prop "role" "main"]
                 [view state.page],
                 HH.div
                 []
@@ -156,3 +158,6 @@ handleAction ( LoginMessage (Login.SetUser ui)) =
     state <- H.get
     H.put $ state { user = ui, page = maybe Login (\_->Home) ui }
 
+handleAction _ =
+  do
+    H.liftEffect $ log "Unhandled action"
