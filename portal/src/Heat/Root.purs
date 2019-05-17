@@ -158,6 +158,15 @@ handleAction ( LoginMessage (Login.SetUser ui)) =
     state <- H.get
     H.put $ state { user = ui, page = maybe Login (\_->Home) ui }
 
+handleAction (MenuMessage Menu.Logout) = do
+  state <- H.get
+  H.put $ state { user = Nothing, page = Login }
+
+handleAction (MenuMessage (Menu.Alert alrt msg)) =
+  do
+    state <- H.get
+    H.put $ state { alert = Just $ HDAL.Alert alrt msg }
+
 handleAction _ =
   do
     H.liftEffect $ log "Unhandled action"

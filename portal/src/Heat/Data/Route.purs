@@ -16,6 +16,7 @@ import Routing.Match (Match, lit)
 data Page = Home
           | Login
           | About
+          | User          
           | Users
           | Error
    
@@ -24,9 +25,11 @@ router :: Match Page
 router = home <|>
          login <|>
          about <|>
-         users
+         users <|>
+         user
   where
     home = Home <$ lit ""
     login = Login <$ lit "login"
     about = About <$ lit "about"
     users = Users <$ lit "users"
+    user = Users <$ lit "user"

@@ -24,17 +24,22 @@ import DOM.HTML.Indexed.ButtonType (ButtonType(..))
 -- | Our own stuff
 import Heat.Component.HTML.Utils (css,
                                   prop,
+                                  maybeElem_,
+                                  maybeOrElem_,
                                   maybeOrElem)
+import Heat.Data.Alert as HDAL
 import Heat.Data.Role (UserRole)
 import Heat.Data.Route (Page(..))
+import Heat.Interface.Authenticate (class ManageAuthentication,
+                                    logout)
 
 -- |The internal actions
 data Action = SetUser (Maybe UserInfo) -- ^Used for setting the user and displaying the correct menu choices
-            | MenuLogout                   -- ^Menu selection
-            | MenuLogin                    -- ^Menu selection
+            | DoLogout                   -- ^Menu selection
 
 -- |The outgoing messages
-data Message = GotoPage Page           -- ^Redirect to a page
+data Message = Alert HDAL.AlertType String    -- ^The component is alerting
+             | Logout                         -- ^The logout message
 
 -- | Slot type for the menu
 type Slot p = ∀ q . H.Slot q Message p
@@ -53,6 +58,7 @@ initialState _ = { user: Nothing }
 
 -- | The component definition
 component :: ∀ q m. MonadAff m
+             ⇒ ManageAuthentication m
              ⇒ H.Component HH.HTML q (Maybe UserInfo) Message m
 component = H.mkComponent
     { initialState
@@ -64,7 +70,7 @@ component = H.mkComponent
 -- | Render the menu
 render ∷ ∀ m . MonadAff m
          ⇒ State → H.ComponentHTML Action () m
-render state = navbar [ navbarHeader "Heat portal", navbarLeft, navbarRight state]
+render state = navbar [ navbarHeader "Heat portal", navbarLeft state, navbarRight state]
 
 -- |The navigation bar for the page
 navbar∷forall p i . Array (HH.HTML p i) -> HH.HTML p i
@@ -85,18 +91,16 @@ navbarHeader header = HH.div [css "navbar-header"] [ HH.a [css "navbar-brand", H
                                                    ]
 
 -- |The left navigation bar
-navbarLeft∷forall p . HH.HTML p Action
-navbarLeft = HH.div [css "navbar-collapse collapse", HP.id_ "navbarCollapse"] [HH.ul [css "navbar-nav mr-auto"]
-                                                                       [ itemAbout,
-                                                                         itemUsers,
-                                                                         itemLogin]]
+navbarLeft∷forall p . State -> HH.HTML p Action
+navbarLeft state = HH.div [css "navbar-collapse collapse", HP.id_ "navbarCollapse"] [HH.ul [css "navbar-nav mr-auto"]
+                                                                                     $ [ itemAbout ] <>
+                                                                                     maybeElem_ state.user itemUsers <>
+                                                                                     maybeOrElem_ state.user itemLogin itemLogout]
 
 -- |The right navigation bar
 navbarRight∷forall p . State -> HH.HTML p Action
-navbarRight state = HH.a [css "navbar-text",
-                          HE.onClick (\_->Just $ (maybe MenuLogin (\_->MenuLogout) state.user)),
-                          HP.href $ "#" <> (maybe "login" (\_->"") state.user)]
-                    [HH.text $ maybe "Not logged in" (\(UserInfo u)->"Logged in as " <> u.username) state.user]
+navbarRight state = HH.a [css "navbar-text", HP.href $ "#" <> (maybe "login" (\_->"user") state.user)]
+                    $ maybeOrElem state.user (HH.text "Not logged in") (\(UserInfo u)->HH.text $ "Logged in as " <> u.username)
 
 itemUsers∷forall p i . HH.HTML p i
 itemUsers = HH.li [css "nav-item active"] [HH.a
@@ -112,9 +116,7 @@ itemLogin = HH.li [css "nav-item"] [HH.a [css "nav-link", HP.href "#login"] [HH.
 
 itemLogout∷forall p . HH.HTML p Action
 itemLogout = HH.li [css "nav-item"] [HH.a [css "nav-link",
-                                           HE.onClick (\_->Just $ MenuLogout),
-                                           HP.href "#"] [HH.text "Logout"]]
-
+                                           HE.onClick (\_->Just $ DoLogout)] [HH.text "Logout"]]
 
 -- |Converts external input to internal actions for the component
 receive∷Maybe UserInfo->Maybe Action
@@ -122,6 +124,7 @@ receive v = Just $ SetUser v
 
 -- | Handles all actions for the menu component
 handleAction ∷ ∀ m . MonadAff m
+               ⇒ ManageAuthentication m
                ⇒ Action → H.HalogenM State Action () Message m Unit
 
 -- |SetUser UserInfo => Sets the user (username, role and level), to be used to be able to determine what menu choices to show
@@ -129,6 +132,11 @@ handleAction (SetUser u) = do
   state <- H.get
   H.put $ state { user = u }
 
+-- |Logs out the user
+handleAction DoLogout = do
+  logout
+  H.raise (Alert HDAL.Info "Logout successful!")
+  H.raise (Logout)
+  
 handleAction _ = do
   H.liftEffect $ log "Select done"
---  H.raise (GotoPage r)

@@ -49,7 +49,7 @@ component =
 
 -- | Render the alert
 render ∷ ∀ m. State → H.ComponentHTML Action () m
-render state = maybeElem state.alert message
+render state = HH.div_ $ maybeElem state.alert message
 
 -- | Display the message
 message ∷ ∀ p i . AL.Alert → HH.HTML p i
