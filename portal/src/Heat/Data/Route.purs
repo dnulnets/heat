@@ -10,26 +10,30 @@ import Prelude
 import Control.Alt ((<|>))
 
 -- | Routing specifics
-import Routing.Match (Match, lit)
+import Routing.Match (Match, lit, str)
 
 -- | All possible routes
 data Page = Home
           | Login
-          | About
-          | User          
+          | User String
           | Users
           | Error
-   
+
+instance showPage :: Show Page where
+  show Home = "home"
+  show Login = "login"
+  show Users = "users"
+  show (User s) = "users " <> s
+  show Error = "error"
+
 -- | Routing function that creates data types based on the URL, we only deal with home and login pages
 router :: Match Page
 router = home <|>
          login <|>
-         about <|>
          users <|>
          user
   where
     home = Home <$ lit ""
     login = Login <$ lit "login"
-    about = About <$ lit "about"
     users = Users <$ lit "users"
-    user = Users <$ lit "user"
+    user = User <$> (lit "user" *> str)

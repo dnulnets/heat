@@ -75,6 +75,5 @@ handleAction ∷ ∀ o m .
 -- | Render => The parent want us to render an alert message.
 -- |
 handleAction (HandleInput alert) = do
-  H.liftEffect $ log "Alert handle input"
   state ← H.get
   H.put state { alert = alert }

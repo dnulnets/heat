@@ -101,7 +101,7 @@ render state = HH.div
                ]
 
 userConv∷UserInfo->Menu.UserInfo
-userConv (UserInfo u) = Menu.UserInfo { username : u.username, role : u.role, level : u.level }
+userConv (UserInfo u) = Menu.UserInfo { userid : u.userid, username : u.username, role : u.role, level : u.level }
 
 -- | Render the main view of the page
 view ∷ ∀ r m. MonadAff m
@@ -134,6 +134,7 @@ handleQuery ∷ ∀ r o m a .
 handleQuery = case _ of
   GotoPage page a → do
     state ← H.get
+    H.liftEffect $ log $ "Transfer from " <> show state.page <> " -> " <> show page
     H.put $ state { page = page, alert = Nothing }
     pure (Just a)
 

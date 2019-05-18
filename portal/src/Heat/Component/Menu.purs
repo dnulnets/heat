@@ -45,7 +45,8 @@ data Message = Alert HDAL.AlertType String    -- ^The component is alerting
 type Slot p = ∀ q . H.Slot q Message p
 
 -- | State for the menu, we have a user so far
-data UserInfo = UserInfo { username∷ String,
+data UserInfo = UserInfo { userid∷String,
+                           username∷ String,
                            role∷ UserRole,
                            level∷ Int
                          }
@@ -99,7 +100,7 @@ navbarLeft state = HH.div [css "navbar-collapse collapse", HP.id_ "navbarCollaps
 
 -- |The right navigation bar
 navbarRight∷forall p . State -> HH.HTML p Action
-navbarRight state = HH.a [css "navbar-text", HP.href $ "#" <> (maybe "login" (\_->"user") state.user)]
+navbarRight state = HH.a [css "navbar-text", HP.href $ "#" <> (maybe "login" (\(UserInfo u)->"user/" <> u.userid) state.user)]
                     $ maybeOrElem state.user (HH.text "Not logged in") (\(UserInfo u)->HH.text $ "Logged in as " <> u.username)
 
 itemUsers∷forall p i . HH.HTML p i
