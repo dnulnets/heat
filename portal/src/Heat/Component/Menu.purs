@@ -38,8 +38,8 @@ data Action = SetUser (Maybe UserInfo) -- ^Used for setting the user and display
             | DoLogout                   -- ^Menu selection
 
 -- |The outgoing messages
-data Message = Alert HDAL.AlertType String    -- ^The component is alerting
-             | Logout                         -- ^The logout message
+data Message = Alert HDAL.Alert -- ^The component is alerting
+             | Logout           -- ^The logout message
 
 -- | Slot type for the menu
 type Slot p = ∀ q . H.Slot q Message p
@@ -94,8 +94,7 @@ navbarHeader header = HH.div [css "navbar-header"] [ HH.a [css "navbar-brand", H
 -- |The left navigation bar
 navbarLeft∷forall p . State -> HH.HTML p Action
 navbarLeft state = HH.div [css "navbar-collapse collapse", HP.id_ "navbarCollapse"] [HH.ul [css "navbar-nav mr-auto"]
-                                                                                     $ [ itemAbout ] <>
-                                                                                     maybeElem_ state.user itemUsers <>
+                                                                                     $ maybeElem_ state.user itemUsers <>
                                                                                      maybeOrElem_ state.user itemLogin itemLogout]
 
 -- |The right navigation bar
@@ -109,14 +108,11 @@ itemUsers = HH.li [css "nav-item active"] [HH.a
                                            HP.href "#users"]
                                           [HH.text "Users"]]
 
-itemAbout∷forall p i . HH.HTML p i
-itemAbout = HH.li [css "nav-item"] [HH.a [css "nav-link", HP.href "#about"] [HH.text "About"]]
-
 itemLogin∷forall p i . HH.HTML p i
 itemLogin = HH.li [css "nav-item"] [HH.a [css "nav-link", HP.href "#login"] [HH.text "Login"]]
 
 itemLogout∷forall p . HH.HTML p Action
-itemLogout = HH.li [css "nav-item"] [HH.a [css "nav-link",
+itemLogout = HH.li [css "nav-item"] [HH.a [css "nav-link", HP.href "#",
                                            HE.onClick (\_->Just $ DoLogout)] [HH.text "Logout"]]
 
 -- |Converts external input to internal actions for the component
@@ -136,7 +132,7 @@ handleAction (SetUser u) = do
 -- |Logs out the user
 handleAction DoLogout = do
   logout
-  H.raise (Alert HDAL.Info "Logout successful!")
+  H.raise (Alert (HDAL.Alert HDAL.Info "Logout successful!"))
   H.raise (Logout)
   
 handleAction _ = do

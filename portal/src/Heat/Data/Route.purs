@@ -5,25 +5,26 @@
 -- |
 module Heat.Data.Route (Page(..), router) where
 
--- | Language specifics
+-- |Language specifics
 import Prelude
 import Control.Alt ((<|>))
 
--- | Routing specifics
+-- |Routing specifics
 import Routing.Match (Match, lit, str)
 
--- | All possible routes
+-- |All possible routes
 data Page = Home
           | Login
           | User String
           | Users
           | Error
 
+-- |Route to string
 instance showPage :: Show Page where
   show Home = "home"
   show Login = "login"
   show Users = "users"
-  show (User s) = "users " <> s
+  show (User s) = "user/" <> s
   show Error = "error"
 
 -- | Routing function that creates data types based on the URL, we only deal with home and login pages

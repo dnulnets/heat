@@ -34,8 +34,8 @@ import Heat.Interface.Authenticate (UserInfo,
                                     login)
 
 -- | Messages possible to send out from the login component
-data Message = Alert HDAL.AlertType String    -- | The component is alerting
-             | SetUser (Maybe UserInfo)       -- | A login event
+data Message = Alert HDAL.Alert           -- | The component is alerting
+             | SetUser (Maybe UserInfo)   -- | A login event
                
 -- | Slot type for all the Login component
 type Slot p = ∀ q . H.Slot q Message p
@@ -118,10 +118,10 @@ handleAction (Submit event) = do
   case userInfo of
     Nothing → do
       H.raise (SetUser Nothing)
-      H.raise (Alert HDAL.Error "Login failed!")
+      H.raise (Alert (HDAL.Alert HDAL.Error "Login failed!"))
     Just u → do
       H.raise (SetUser $ Just u)
-      H.raise (Alert HDAL.Info "Login successful!")
+      H.raise (Alert (HDAL.Alert HDAL.Info "Login successful!"))
       
 -- | Input f => Whenever the textbox entry is done, i.e. by leaving the box or pressing another control it generates a
 -- | Input f message, where f is the function that operates on the state to save the new value. It is here we should
