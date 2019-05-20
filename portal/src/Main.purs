@@ -12,7 +12,7 @@ import Data.Either (Either(..))
 import Data.Foldable (traverse_)
 import Data.String.CodeUnits as Str
 import Effect (Effect)
-import Effect.Aff (Aff)
+import Effect.Aff (Aff, launchAff_)
 import Effect.Class (liftEffect)
 import Effect.Ref as Ref
 import Effect.Console (log)
@@ -35,12 +35,13 @@ import Web.HTML.Event.HashChangeEvent.EventTypes as HCET
 import Web.HTML.Window as Window
 
 -- | Routing imports
-import Routing.Hash (match)
+import Routing.Hash (getHash, setHash, matchesWith)
+import Routing.Duplex (parse)
 
 -- | Heat imports
 import Heat (Environment, runApplication)
 import Heat.Root as Root
-import Heat.Data.Route (router, Page(..))
+import Heat.Data.Route (router, routeCodec, Page(..))
 import Heat.Utils.Request (BaseURL(..))
 
 -- | Produce events from the browser for route changes
@@ -57,11 +58,11 @@ hashChangeProducer = CRA.produce \emitter -> do
 hashChangeConsumer ∷ (∀ a. Root.Query a -> Aff (Maybe a)) → CR.Consumer HCE.HashChangeEvent Aff Unit
 hashChangeConsumer query = CR.consumer \event -> do
   let hash = Str.drop 1 $ Str.dropWhile (_ /= '#') $ HCE.newURL event
-      result = match router hash
+      result = parse routeCodec hash
       newPage = case result of
         Left _ -> Home
         Right page -> page
-  liftEffect $ log $ "New URL = " <> HCE.newURL event
+  liftEffect $ log $ "New URL = '" <> hash <> "'," <> show result
   void $ query $ H.tell $ Root.GotoPage newPage
   pure Nothing
 
@@ -80,4 +81,12 @@ main = HA.runHalogenAff do
     env = { baseURL : BaseURL "http://localhost:3000",
             userInfo : currentUserInfo }
   io ← runUI (rootComponent env) unit body
-  CR.runProcess (hashChangeProducer CR.$$ hashChangeConsumer io.query)  
+  
+  -- CR.runProcess (hashChangeProducer CR.$$ hashChangeConsumer io.query)
+  
+  void $ liftEffect $ matchesWith (parse routeCodec) \old new -> do
+    liftEffect $ log $ "Router " <> show new
+    when (old /= Just new) do
+      liftEffect $ log $ "Router change " <> show new
+      launchAff_ $ io.query $ H.tell $ Root.GotoPage new
+    

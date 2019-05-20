@@ -31,15 +31,21 @@ import Control.Monad.Reader.Trans (ReaderT)
 
 import Halogen as H
 
+-- Routing imports
+import Routing.Duplex (print)
+import Routing.Hash (setHash)
+
 --
 -- Our own imports
 --
 import Heat.Interface.Authenticate (UserInfo,
                                     class ManageAuthentication)
+import Heat.Interface.Navigate (class ManageNavigation)
+import Heat.Interface.Endpoint as EP
+import Heat.Data.Route (routeCodec)
 import Heat.Utils.Request (BaseURL,
                            mkRequest,
                            RequestMethod (..))
-import Heat.Interface.Endpoint as EP
 
 -- | The application environment
 type Environment = { baseURL ∷ BaseURL,
@@ -65,7 +71,15 @@ derive newtype instance monadAffApplication ∷ MonadAff ApplicationM
 -- | ask implementation
 instance monadAskApplication ∷ TypeEquals e Environment ⇒ MonadAsk e ApplicationM where
   ask = ApplicationM $ asks from
-  
+
+--
+-- Add the set of functions that handles navigation in the app
+--
+instance manageNavigationApplicationM ∷ ManageNavigation ApplicationM where
+
+  -- |Navigates the app using hash based routing
+  gotoPage = H.liftEffect <<< setHash <<< print routeCodec
+    
 --
 --  Add the set of functions that handles login and logout of a user
 --
@@ -90,4 +104,4 @@ instance manageAuthenticationApplicationM :: ManageAuthentication ApplicationM w
   logout = do
     ref <- asks _.userInfo
     H.liftEffect $ REF.write Nothing ref
-    
+

@@ -33,13 +33,13 @@ import Heat.Component.Login as Login
 import Heat.Component.Home as Home
 import Heat.Interface.Authenticate (UserInfo(..),
                                     class ManageAuthentication)
+import Heat.Interface.Navigate (class ManageNavigation)
 
 -- | The querys supported by the root page
 data Query a = GotoPage Page a -- ^Goto page query from the parent
 
 -- | The actions supported by the root page
-data Action = AGotoPage Page               -- ^Goto page action from the children
-            | AAlert    HDAL.Alert         -- ^Alert action from the children
+data Action = AAlert    HDAL.Alert         -- ^Alert action from the children
             | ASetUser  (Maybe UserInfo)   -- ^Sets the user
             | ALogout                      -- ^Logs out the user
               
@@ -64,6 +64,7 @@ _home = SProxy::SProxy "home"
 -- | The root component definition
 component :: ∀ i o r m . MonadAff m
              ⇒ ManageAuthentication m
+             ⇒ ManageNavigation m
              ⇒ MonadAsk { userInfo ∷ Ref (Maybe UserInfo) | r } m
              ⇒ H.Component HH.HTML Query i o m
 component =
@@ -83,6 +84,7 @@ initialState _ = { user: Nothing,
 -- | Render the root application, it contains a menu, alert data, main page view and a footer
 render ∷ ∀ m r. MonadAff m
          ⇒ ManageAuthentication m
+         ⇒ ManageNavigation m
          ⇒ MonadAsk { userInfo ∷ Ref (Maybe UserInfo) | r } m
          ⇒ State → H.ComponentHTML Action ChildSlots m
 render state = HH.div
@@ -101,27 +103,17 @@ render state = HH.div
                 []
                 [HH.slot _footer unit Footer.component unit absurd]
                ]
-
--- |Converts menu messages to root actions
-menuMessageConv::Menu.Message->Action
-menuMessageConv Menu.Logout = ALogout
-menuMessageConv (Menu.Alert alert) = AAlert alert 
-
--- |Converts menu messages to root actions
-loginMessageConv::Login.Message->Action
-loginMessageConv (Login.SetUser user) = ASetUser user
-loginMessageConv (Login.Alert alert) = AAlert alert 
-
--- |Converts authenticates userinfo to the menus userinfo
-userConv∷UserInfo->Menu.UserInfo
-userConv (UserInfo u) = Menu.UserInfo { userid : u.userid, 
-                                        username : u.username,
-                                        role : u.role,
-                                        level : u.level }
+  where
+    userConv∷UserInfo->Menu.UserInfo
+    userConv (UserInfo u) = Menu.UserInfo { userid : u.userid, 
+                                            username : u.username,
+                                            role : u.role,
+                                            level : u.level }
 
 -- | Render the main view of the page
 view ∷ ∀ r m. MonadAff m
        ⇒ ManageAuthentication m
+       ⇒ ManageNavigation m
        ⇒ MonadAsk { userInfo ∷ Ref (Maybe UserInfo) | r } m
        ⇒ Page → H.ComponentHTML Action ChildSlots m
 view Login = HH.slot _login unit Login.component unit (Just <<< loginMessageConv)
@@ -142,6 +134,16 @@ view _ = HH.div
               ]
              ]
 
+-- |Converts menu messages to root actions
+menuMessageConv::Menu.Message->Action
+menuMessageConv Menu.Logout = ALogout
+menuMessageConv (Menu.Alert alert) = AAlert alert 
+
+-- |Converts login messages to root actions
+loginMessageConv::Login.Message->Action
+loginMessageConv (Login.SetUser user) = ASetUser user
+loginMessageConv (Login.Alert alert) = AAlert alert 
+
 -- | Handle the queries sent to the root page
 handleQuery ∷ ∀ r o m a .
               MonadAff m ⇒ 
@@ -150,8 +152,8 @@ handleQuery ∷ ∀ r o m a .
 handleQuery = case _ of
   GotoPage page a → do
     state ← H.get
-    H.liftEffect $ log $ "Browser request transfer from " <> show state.page <> " -> " <> show page
-    H.put $ state { page = page, alert = Nothing }
+    H.liftEffect $ log $ "Browser request transfer from " <> show state.page <> " to " <> show page
+    H.put $ state { page = page }
     pure (Just a)
 
 -- | Handle the actions within the root page
@@ -160,16 +162,9 @@ handleAction ∷ ∀ r o m .
                 MonadAsk { userInfo :: Ref (Maybe UserInfo) | r } m ⇒
                 Action → H.HalogenM State Action ChildSlots o m Unit
 
--- |AGotoPage page => Goto page action used by the childs of this page.
-handleAction (AGotoPage page) =
-  do
-    state <- H.get
-    H.liftEffect $ log $ "Child request transfer from " <> show state.page <> " -> " <> show page    
-    H.put $ state { page = page, alert = Nothing }
-
 -- | Alert level message  => Sets the alert message and level for the root page, to be renderd by the
 -- | alert view.
-handleAction all@(AAlert alert) =
+handleAction (AAlert alert) =
   do
     state <- H.get
     H.put $ state { alert = Just $ alert }
@@ -178,10 +173,10 @@ handleAction all@(AAlert alert) =
 handleAction (ASetUser ui) =
   do
     state <- H.get
-    H.put $ state { user = ui, page = maybe Login (\_->Home) ui }
+    H.put $ state { user = ui }
 
 -- | Logout => Logs out the user
 handleAction ALogout = do
   state <- H.get
-  H.put $ state { user = Nothing, page = Login }
+  H.put $ state { user = Nothing }
 

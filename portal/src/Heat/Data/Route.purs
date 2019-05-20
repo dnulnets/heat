@@ -3,38 +3,50 @@
 -- |
 -- | Written by Tomas Stenlund, Sundsvall, Sweden (c) 2019
 -- |
-module Heat.Data.Route (Page(..), router) where
+module Heat.Data.Route (Page(..), router, routeCodec) where
 
 -- |Language specifics
-import Prelude
+import Prelude hiding ((/))
+
 import Control.Alt ((<|>))
+
+import Data.Generic.Rep (class Generic)
+import Data.Generic.Rep.Show (genericShow)
 
 -- |Routing specifics
 import Routing.Match (Match, lit, str)
+
+import Routing.Duplex (RouteDuplex', as, path, root, segment, string)
+import Routing.Duplex.Generic (noArgs, sum)
+import Routing.Duplex.Generic.Syntax ((/))
 
 -- |All possible routes
 data Page = Home
           | Login
           | User String
-          | Users
           | Error
 
--- |Route to string
+derive instance genericRoute :: Generic Page _
+derive instance eqRoute :: Eq Page
+derive instance ordRoute :: Ord Page
 instance showPage :: Show Page where
-  show Home = "home"
-  show Login = "login"
-  show Users = "users"
-  show (User s) = "user/" <> s
-  show Error = "error"
+  show = genericShow
 
 -- | Routing function that creates data types based on the URL, we only deal with home and login pages
 router :: Match Page
 router = home <|>
          login <|>
-         users <|>
          user
   where
     home = Home <$ lit ""
     login = Login <$ lit "login"
-    users = Users <$ lit "users"
     user = User <$> (lit "user" *> str)
+
+-- | Bidirectional parsing and unparsing
+routeCodec :: RouteDuplex' Page
+routeCodec = root $ sum
+  { "Home": noArgs
+  , "Login": "login" / noArgs
+  , "Error": "error" / noArgs
+  , "User": "user" / string segment
+  }

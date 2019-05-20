@@ -4,6 +4,7 @@
 module Heat.Component.HTML.Utils (css,
                                   style,
                                   prop,
+                                  href,
                                   maybeElem,
                                   maybeOrElem,
                                   maybeElem_,
@@ -14,10 +15,15 @@ module Heat.Component.HTML.Utils (css,
 import Prelude
 import Data.Maybe (Maybe(..))
 
+import Routing.Duplex (print)
+
 -- | Halogen imports
 import Halogen.HTML as HH
 import Halogen.HTML.Properties as HP
 import Halogen.HTML.Core (AttrName(..), PropName(..))
+
+-- |Our own import
+import Heat.Data.Route (Page, routeCodec)
 
 -- | Helper function for adding class to HTML tags
 css ∷ forall r i. String → HH.IProp ( class ∷ String | r ) i
@@ -30,6 +36,10 @@ style = HP.prop (PropName "style")
 -- | A generic property string function
 prop ∷ forall r i. String → String → HP.IProp r i
 prop name = HP.attr (AttrName name)
+
+-- |A href that is built on the route data type instead of a string
+href :: forall r i. Page -> HH.IProp ( href :: String | r) i
+href = HP.href <<< append "#" <<< print routeCodec
 
 -- | Render a fragment if the the value exists (Just), empty if not (Nothing)
 maybeElem ∷ forall p i a. Maybe a → (a → HH.HTML p i) → Array (HH.HTML p i)

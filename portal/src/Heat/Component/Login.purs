@@ -27,7 +27,10 @@ import Web.Event.Event as Event
 
 -- | Our own stuff
 import Heat.Data.Alert as HDAL
+import Heat.Data.Route (Page(..))
 import Heat.Component.HTML.Utils (css, style)
+import Heat.Interface.Navigate (class ManageNavigation,
+                                gotoPage)
 import Heat.Interface.Authenticate (UserInfo,
                                     Authenticate(..),
                                     class ManageAuthentication,
@@ -56,6 +59,7 @@ data Action = Submit Event
 -- | The component definition
 component ∷ ∀ r q i m . MonadAff m
             ⇒ ManageAuthentication m
+            ⇒ ManageNavigation m
             ⇒ MonadAsk { userInfo ∷ Ref (Maybe UserInfo) | r } m
             ⇒ H.Component HH.HTML q i Message m
 component =
@@ -106,6 +110,7 @@ render state = HH.div
 -- | Handles all actions for the login component
 handleAction ∷ ∀ r m . MonadAff m
                ⇒ ManageAuthentication m
+               ⇒ ManageNavigation m
                ⇒ MonadAsk { userInfo ∷ Ref (Maybe UserInfo) | r } m               
                ⇒ Action → H.HalogenM State Action () Message m Unit
 
@@ -121,6 +126,7 @@ handleAction (Submit event) = do
       H.raise (Alert (HDAL.Alert HDAL.Error "Login failed!"))
     Just u → do
       H.raise (SetUser $ Just u)
+      gotoPage Home
       H.raise (Alert (HDAL.Alert HDAL.Info "Login successful!"))
       
 -- | Input f => Whenever the textbox entry is done, i.e. by leaving the box or pressing another control it generates a
