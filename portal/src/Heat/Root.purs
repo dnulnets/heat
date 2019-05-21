@@ -9,7 +9,7 @@ module Heat.Root (component,
 -- Language imports
 import Prelude
 
-import Data.Maybe (Maybe(..), maybe)
+import Data.Maybe (Maybe(..))
 import Data.Symbol (SProxy(..))
 
 import Control.Monad.Reader.Trans (class MonadAsk)

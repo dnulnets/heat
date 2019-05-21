@@ -9,7 +9,6 @@ module Heat.Component.Alert where
 import Prelude
 import Data.Maybe (Maybe(..))
 import Effect.Aff.Class (class MonadAff)
-import Effect.Console (log)
 
 -- | Halogen import
 import Halogen as H
