@@ -63,7 +63,7 @@ hashChangeConsumer query = CR.consumer \event -> do
         Left _ -> Home
         Right page -> page
   liftEffect $ log $ "New URL = '" <> hash <> "'," <> show result
-  void $ query $ H.tell $ Root.GotoPage newPage
+  void $ query $ H.tell $ Root.GotoPageRequest newPage
   pure Nothing
 
 -- | Hoist in our Application monad
@@ -85,8 +85,7 @@ main = HA.runHalogenAff do
   -- CR.runProcess (hashChangeProducer CR.$$ hashChangeConsumer io.query)
   
   void $ liftEffect $ matchesWith (parse routeCodec) \old new -> do
-    liftEffect $ log $ "Router " <> show new
+    liftEffect $ log $ "Router change from " <> show old <> " to " <> show new
     when (old /= Just new) do
-      liftEffect $ log $ "Router change " <> show new
-      launchAff_ $ io.query $ H.tell $ Root.GotoPage new
+      launchAff_ $ io.query $ H.tell $ Root.GotoPageRequest new
     

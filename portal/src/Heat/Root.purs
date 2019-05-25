@@ -36,17 +36,19 @@ import Heat.Interface.Authenticate (UserInfo(..),
 import Heat.Interface.Navigate (class ManageNavigation)
 
 -- | The querys supported by the root page
-data Query a = GotoPage Page a -- ^Goto page query from the parent
+data Query a = GotoPageRequest Page a -- ^Goto page query from the parent
 
 -- | The actions supported by the root page
-data Action = AAlert    HDAL.Alert         -- ^Alert action from the children
-            | ASetUser  (Maybe UserInfo)   -- ^Sets the user
-            | ALogout                      -- ^Logs out the user
+data Action = AlertAction    HDAL.Alert         -- ^Alert action from the children
+            | SetUserAction  (Maybe UserInfo)   -- ^Sets the user
+            | LogoutAction                      -- ^Logs out the user
+            | ReloadAction                      -- ^Reloads the current page
               
 -- | The state for the application, it will contain the logged in user among other things
 type State = { user ∷ Maybe UserInfo,
                page ∷ Page,
-               alert ∷ Maybe HDAL.Alert }
+               alert ∷ Maybe HDAL.Alert,
+               shown ∷ Boolean}
 
 -- | The set of slots for the root container
 type ChildSlots = ( menu ∷ Menu.Slot Unit,
@@ -79,7 +81,8 @@ component =
 initialState ∷ ∀ i. i → State
 initialState _ = { user: Nothing,
                    page: Home,
-                   alert: Nothing }
+                   alert: Nothing,
+                   shown: true}
 
 -- | Render the root application, it contains a menu, alert data, main page view and a footer
 render ∷ ∀ m r. MonadAff m
@@ -136,13 +139,14 @@ view _ = HH.div
 
 -- |Converts menu messages to root actions
 menuMessageConv::Menu.Message->Action
-menuMessageConv Menu.Logout = ALogout
-menuMessageConv (Menu.Alert alert) = AAlert alert 
+menuMessageConv Menu.LogoutMessage = LogoutAction
+menuMessageConv (Menu.AlertMessage alert) = AlertAction alert 
 
 -- |Converts login messages to root actions
 loginMessageConv::Login.Message->Action
-loginMessageConv (Login.SetUser user) = ASetUser user
-loginMessageConv (Login.Alert alert) = AAlert alert 
+loginMessageConv (Login.SetUserMessage user) = SetUserAction user
+loginMessageConv (Login.AlertMessage alert) = AlertAction alert 
+loginMessageConv Login.ReloadMessage = ReloadAction
 
 -- | Handle the queries sent to the root page
 handleQuery ∷ ∀ r o m a .
@@ -150,10 +154,10 @@ handleQuery ∷ ∀ r o m a .
               MonadAsk { userInfo ∷ Ref (Maybe UserInfo) | r } m ⇒ 
               Query a → H.HalogenM State Action ChildSlots o m (Maybe a)
 handleQuery = case _ of
-  GotoPage page a → do
+  GotoPageRequest newpage a → do
     state ← H.get
-    H.liftEffect $ log $ "Browser request transfer from " <> show state.page <> " to " <> show page
-    H.put $ state { page = page }
+    H.liftEffect $ log $ "GotoPageRequest from " <> show state.page <> " to " <> show newpage
+    H.put $ state { page = newpage, shown = true, alert = if state.shown then Nothing else state.alert }
     pure (Just a)
 
 -- | Handle the actions within the root page
@@ -162,21 +166,25 @@ handleAction ∷ ∀ r o m .
                 MonadAsk { userInfo :: Ref (Maybe UserInfo) | r } m ⇒
                 Action → H.HalogenM State Action ChildSlots o m Unit
 
+-- | Reload => Reloads a page
+handleAction ReloadAction = do
+  state <- H.get
+  H.liftEffect $ log "Reload page"
+  H.put $ state { shown = true, alert = if state.shown then Nothing else state.alert }
+
 -- | Alert level message  => Sets the alert message and level for the root page, to be renderd by the
 -- | alert view.
-handleAction (AAlert alert) =
-  do
-    state <- H.get
-    H.put $ state { alert = Just $ alert }
+handleAction (AlertAction alert) = do
+  state <- H.get
+  H.put $ state { alert = Just $ alert, shown = false }
 
--- | SetUser userinfo => Sets the logged in user and redirect to landing page
-handleAction (ASetUser ui) =
-  do
-    state <- H.get
-    H.put $ state { user = ui }
+-- | SetUser userinfo => Sets the logged in user
+handleAction (SetUserAction ui) = do
+  state <- H.get
+  H.put $ state { user = ui }
 
 -- | Logout => Logs out the user
-handleAction ALogout = do
+handleAction LogoutAction = do
   state <- H.get
   H.put $ state { user = Nothing }
-
+  

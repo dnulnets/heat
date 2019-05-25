@@ -14,8 +14,7 @@ import Data.Maybe (Maybe(..))
 import Data.Either (Either(..))
 import Data.Tuple (Tuple(..))
 
--- import Data.Argonaut (encodeJson, decodeJson)
-
+import Effect (Effect)
 import Effect.Aff (Aff)
 import Effect.Aff.Class (class MonadAff)
 import Effect.Class (class MonadEffect)
@@ -29,11 +28,16 @@ import Control.Monad.Reader (asks, runReaderT)
 import Control.Monad.Reader.Class (class MonadAsk)
 import Control.Monad.Reader.Trans (ReaderT)
 
+-- Halogen imports
 import Halogen as H
 
 -- Routing imports
-import Routing.Duplex (print)
-import Routing.Hash (setHash)
+import Routing.Duplex (print, parse)
+import Routing.Hash (setHash, getHash)
+
+import Web.HTML (window)
+import Web.HTML.Location as L
+import Web.HTML.Window as Window
 
 --
 -- Our own imports
@@ -78,8 +82,9 @@ instance monadAskApplication ∷ TypeEquals e Environment ⇒ MonadAsk e Applica
 instance manageNavigationApplicationM ∷ ManageNavigation ApplicationM where
 
   -- |Navigates the app using hash based routing
-  gotoPage = H.liftEffect <<< setHash <<< print routeCodec
-    
+  gotoPage newPage = do
+    H.liftEffect $ setHash $ print routeCodec newPage
+
 --
 --  Add the set of functions that handles login and logout of a user
 --

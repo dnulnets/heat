@@ -100,11 +100,6 @@ mkRequest ∷ ∀ a m r v. MonadAff m
 mkRequest ep rm = do
   baseURL <- asks _.baseURL
   response <- liftAff $ AX.request $ defaultRequest baseURL ep rm Nothing
-  
-  liftEffect $ log $ case response.body of
-    Left err -> AXRF.printResponseFormatError err -- Make a string out of affjax errors
-    Right val -> stringify val
-      
   pure case response.body of
     Left err → Left $ AXRF.printResponseFormatError err -- Make a string out of affjax errors
     Right val → (Tuple response.status) <$> (decodeJson val)

@@ -23,7 +23,7 @@ import Heat.Data.Alert as AL
 type Input = Maybe AL.Alert
 
 -- | Internal actions
-data Action = HandleInput Input
+data Action = SetAlert Input
 
 -- | Slot type for the alert, we do not have any Query therefore it looks like this
 type Slot p = ∀ q . H.Slot q Void p
@@ -44,7 +44,7 @@ component =
     { initialState
     , render
     , eval: H.mkEval $ H.defaultEval { handleAction = handleAction,
-                                       receive = \v → Just $ HandleInput v }
+                                       receive = \v → Just $ SetAlert v }
     }
 
 -- | Render the alert
@@ -74,6 +74,6 @@ handleAction ∷ ∀ o m .
 -- |
 -- | Render => The parent want us to render an alert message.
 -- |
-handleAction (HandleInput alert) = do
+handleAction (SetAlert alert) = do
   state ← H.get
   H.put state { alert = alert }

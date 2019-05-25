@@ -44,12 +44,12 @@ import Heat.Interface.Navigate (class ManageNavigation,
                                   gotoPage)
 
 -- |The internal actions
-data Action = SetUser (Maybe UserInfo) -- ^Used for setting the user and displaying the correct menu choices
-            | DoLogout MouseEvent      -- ^Menu selection
+data Action = SetUserAction (Maybe UserInfo) -- ^Used for setting the user and displaying the correct menu choices
+            | LogoutAction MouseEvent        -- ^Menu selection
 
 -- |The outgoing messages
-data Message = Alert HDAL.Alert -- ^The component is alerting
-             | Logout           -- ^The logout message
+data Message = AlertMessage HDAL.Alert -- ^The component is alerting
+             | LogoutMessage           -- ^The logout message
 
 -- | Slot type for the menu
 type Slot p = ∀ q . H.Slot q Message p
@@ -76,7 +76,7 @@ component = H.mkComponent
     { initialState
     , render
     , eval: H.mkEval $ H.defaultEval { handleAction = handleAction,
-                                       receive = receive }
+                                       receive = receiveMessage }
     }
 
 -- | Render the menu
@@ -124,11 +124,11 @@ itemLogin∷forall p . HH.HTML p Action
 itemLogin = HH.li [css "nav-item"] [HH.a [css "nav-link", href Login] [HH.text "Login"]]
 
 itemLogout∷forall p . HH.HTML p Action
-itemLogout = HH.li [css "nav-item"] [HH.a [css "nav-link", href Home, HE.onClick (\a->Just $ DoLogout a)] [HH.text "Logout"]]
+itemLogout = HH.li [css "nav-item"] [HH.a [css "nav-link", href Home, HE.onClick (\a->Just $ LogoutAction a)] [HH.text "Logout"]]
 
 -- |Converts external input to internal actions for the component
-receive∷Maybe UserInfo->Maybe Action
-receive v = Just $ SetUser v
+receiveMessage∷Maybe UserInfo->Maybe Action
+receiveMessage v = Just $ SetUserAction v
 
 -- | Handles all actions for the menu component
 handleAction ∷ ∀ m . MonadAff m
@@ -137,17 +137,17 @@ handleAction ∷ ∀ m . MonadAff m
                ⇒ Action → H.HalogenM State Action () Message m Unit
 
 -- |SetUser UserInfo => Sets the user (username, role and level), to be used to be able to determine what menu choices to show
-handleAction (SetUser u) = do
+handleAction (SetUserAction u) = do
   state <- H.get
   H.put $ state { user = u }
 
 -- |Logs out the user
-handleAction (DoLogout me) = do
+handleAction (LogoutAction me) = do
   H.liftEffect $ Event.preventDefault $ MouseEvent.toEvent me
   logout
+  H.raise $ LogoutMessage
   gotoPage Login
-  H.raise $ Logout
-  H.raise $ Alert $ HDAL.Alert HDAL.Info "Logout successful!"
+  H.raise $ AlertMessage $ HDAL.Alert HDAL.Info "Logout successful!"
   
 handleAction _ = do
   H.liftEffect $ log "Select done"
