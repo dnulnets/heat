@@ -101,14 +101,19 @@ instance encodeJsonUpdateUser :: EncodeJson UpdateUser where
 
 -- |The class for user handling
 class Monad m ⇐ ManageUsers m where
+  
   retrieve∷String               -- ^The user identity
     →m (Maybe RetrieveUser)     -- ^The retrieved user
+    
   retrieveList∷m (List RetrieveUser) -- ^The list of retrieved users
+  
   update∷String                 -- ^The user identity
     →UpdateUser                 -- ^The user data to be updated
     →m Unit
+    
   delete∷String                 -- ^The user identity
     →m Unit
+    
   create∷CreateUser             -- ^The user data
     →m (Maybe UserIdentity)     -- ^The user identity
   

@@ -13,6 +13,7 @@ import Prelude
 import Data.Maybe (Maybe(..))
 import Data.Either (Either(..))
 import Data.Tuple (Tuple(..))
+import Data.List (List(..))
 
 import Effect (Effect)
 import Effect.Aff (Aff)
@@ -44,6 +45,8 @@ import Web.HTML.Window as Window
 --
 import Heat.Interface.Authenticate (UserInfo,
                                     class ManageAuthentication)
+import Heat.Interface.User (RetrieveUser(..),
+                            class ManageUsers)
 import Heat.Interface.Navigate (class ManageNavigation)
 import Heat.Interface.Endpoint as EP
 import Heat.Data.Route (routeCodec)
@@ -110,3 +113,22 @@ instance manageAuthenticationApplicationM :: ManageAuthentication ApplicationM w
     ref <- asks _.userInfo
     H.liftEffect $ REF.write Nothing ref
 
+--
+--  Add the set of functions that handles login and logout of a user
+--
+instance manageUsersApplicationM :: ManageUsers ApplicationM where
+
+  -- |Retrieves userinformation about the specified user
+  retrieve userid = do
+    response <- mkRequest (EP.User (Just userid)) (Get::RequestMethod Unit) 
+    case response of
+      Left err -> do
+        H.liftEffect $ log $ "Error: " <> err
+        pure Nothing
+      Right (Tuple _ retrievedUser) -> do
+        pure $ Just retrievedUser
+    
+  retrieveList = pure Nil
+  update _ _ = pure unit
+  delete _ = pure unit
+  create _ = pure Nothing

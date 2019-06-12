@@ -31,9 +31,11 @@ import Heat.Component.Alert as Alert
 import Heat.Component.Footer as Footer
 import Heat.Component.Login as Login
 import Heat.Component.Home as Home
+import Heat.Component.User as User
 import Heat.Interface.Authenticate (UserInfo(..),
                                     class ManageAuthentication)
 import Heat.Interface.Navigate (class ManageNavigation)
+import Heat.Interface.User (class ManageUsers)
 
 -- | The querys supported by the root page
 data Query a = GotoPageRequest Page a -- ^Goto page query from the parent
@@ -55,16 +57,19 @@ type ChildSlots = ( menu ∷ Menu.Slot Unit,
                     alert ∷ Alert.Slot Unit,
                     footer ∷ Footer.Slot Unit,
                     login ∷ Login.Slot Unit,
-                    home ∷ Home.Slot Unit)
+                    home ∷ Home.Slot Unit,
+                    user ∷ User.Slot Unit)
                   
 _menu = SProxy::SProxy "menu"
 _alert = SProxy::SProxy "alert"
 _footer = SProxy::SProxy "footer"
 _login = SProxy::SProxy "login"
 _home = SProxy::SProxy "home"
+_user = SProxy::SProxy "user"
 
 -- | The root component definition
 component :: ∀ i o r m . MonadAff m
+             ⇒ ManageUsers m
              ⇒ ManageAuthentication m
              ⇒ ManageNavigation m
              ⇒ MonadAsk { userInfo ∷ Ref (Maybe UserInfo) | r } m
@@ -86,6 +91,7 @@ initialState _ = { user: Nothing,
 
 -- | Render the root application, it contains a menu, alert data, main page view and a footer
 render ∷ ∀ m r. MonadAff m
+         ⇒ ManageUsers m
          ⇒ ManageAuthentication m
          ⇒ ManageNavigation m
          ⇒ MonadAsk { userInfo ∷ Ref (Maybe UserInfo) | r } m
@@ -116,11 +122,13 @@ render state = HH.div
 -- | Render the main view of the page
 view ∷ ∀ r m. MonadAff m
        ⇒ ManageAuthentication m
+       ⇒ ManageUsers m
        ⇒ ManageNavigation m
        ⇒ MonadAsk { userInfo ∷ Ref (Maybe UserInfo) | r } m
        ⇒ Page → H.ComponentHTML Action ChildSlots m
 view Login = HH.slot _login unit Login.component unit (Just <<< loginMessageConv)
 view Home = HH.slot _home unit Home.component unit absurd
+view (User userid) = HH.slot _user unit User.component userid absurd
 view _ = HH.div
              [css "container", style "margin-top:20px"]
              [HH.div
