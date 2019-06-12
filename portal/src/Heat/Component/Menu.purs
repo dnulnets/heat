@@ -145,6 +145,5 @@ handleAction (LogoutAction me) = do
   logout
   H.raise $ LogoutMessage
   gotoPage Login
-  H.raise $ Logout
-  H.raise $ Alert $ HDAL.Alert HDAL.Info "Logout successful!"
+  H.raise $ AlertMessage $ HDAL.Alert HDAL.Info "Logout successful!"
 
