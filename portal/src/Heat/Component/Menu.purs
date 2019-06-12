@@ -10,7 +10,6 @@ import Prelude
 import Data.Maybe (Maybe(..), maybe)
 
 import Effect.Aff.Class (class MonadAff)
-import Effect.Console (log)
 
 -- Halogen import
 import Halogen as H
@@ -20,7 +19,6 @@ import Halogen.HTML.Properties.ARIA as HPA
 import Halogen.HTML.Events as HE
 
 -- Web import
-import Web.Event.Event (Event)
 import Web.Event.Event as Event
 import Web.UIEvent.MouseEvent (MouseEvent)
 import Web.UIEvent.MouseEvent as MouseEvent
@@ -147,7 +145,6 @@ handleAction (LogoutAction me) = do
   logout
   H.raise $ LogoutMessage
   gotoPage Login
-  H.raise $ AlertMessage $ HDAL.Alert HDAL.Info "Logout successful!"
-  
-handleAction _ = do
-  H.liftEffect $ log "Select done"
+  H.raise $ Logout
+  H.raise $ Alert $ HDAL.Alert HDAL.Info "Logout successful!"
+

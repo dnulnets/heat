@@ -16,7 +16,7 @@ import Data.Generic.Rep.Show (genericShow)
 -- |Routing specifics
 import Routing.Match (Match, lit, str)
 
-import Routing.Duplex (RouteDuplex', as, path, root, segment, string)
+import Routing.Duplex (RouteDuplex', root, segment, string)
 import Routing.Duplex.Generic (noArgs, sum)
 import Routing.Duplex.Generic.Syntax ((/))
 

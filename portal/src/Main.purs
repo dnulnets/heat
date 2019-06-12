@@ -35,13 +35,13 @@ import Web.HTML.Event.HashChangeEvent.EventTypes as HCET
 import Web.HTML.Window as Window
 
 -- | Routing imports
-import Routing.Hash (getHash, setHash, matchesWith)
+import Routing.Hash (matchesWith)
 import Routing.Duplex (parse)
 
 -- | Heat imports
 import Heat (Environment, runApplication)
 import Heat.Root as Root
-import Heat.Data.Route (router, routeCodec, Page(..))
+import Heat.Data.Route (routeCodec, Page(..))
 import Heat.Utils.Request (BaseURL(..))
 
 -- | Produce events from the browser for route changes
