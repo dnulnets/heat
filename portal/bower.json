@@ -10,7 +10,7 @@
     "purescript-prelude": "^4.1.0",
     "purescript-console": "^4.2.0",
     "purescript-effect": "^2.0.1",
-    "purescript-halogen": "#5.0.0-rc.4",
+    "purescript-halogen": "#5.0.0-rc.5",
     "purescript-routing": "^9.0.0",
     "purescript-aff-coroutines": "^7.0.0",
     "purescript-affjax": "^9.0.0",
