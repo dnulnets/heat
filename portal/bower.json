@@ -6,21 +6,24 @@
     "bower_components",
     "output"
   ],
+  "___dependencies": {
+    "purescript-console": "~4.2.0",
+    "purescript-prelude": "~4.1.0"
+  },	
   "dependencies": {
-    "purescript-prelude": "^4.1.0",
-    "purescript-console": "^4.2.0",
-    "purescript-effect": "^2.0.1",
-    "purescript-halogen": "#5.0.0-rc.5",
-    "purescript-routing": "^9.0.0",
-    "purescript-aff-coroutines": "^7.0.0",
-    "purescript-affjax": "^9.0.0",
-    "purescript-argonaut-core": "^5.0.0",
-    "purescript-argonaut-codecs": "^6.0.1",
-    "purescript-argonaut": "^6.0.0",
-    "purescript-generics-rep": "^6.1.1",
-    "purescript-routing-duplex": "^0.3.0"
+    "purescript-effect": "~2.0.1",
+    "purescript-halogen": "#5.0.0-rc.6",
+    "purescript-routing": "~9.0.0",
+    "purescript-argonaut-core": "~5.0.0",
+    "purescript-argonaut-codecs": "~6.0.1",
+    "purescript-argonaut": "~6.0.0",
+    "purescript-generics-rep": "~6.1.1",
+    "purescript-routing-duplex": "~0.4.0",
+    "purescript-typelevel-prelude": "~5.0.0",
+    "purescript-aff-coroutines": "~7.0.0",
+    "purescript-affjax": "~9.0.0"
   },
-  "devDependenciesCommented": {
-    "purescript-psci-support": "^4.0.0"
+  "___devDependenciesCommented": {
+    "purescript-psci-support": "~4.0.0"
   }
 }

@@ -1,0 +1,59 @@
+Install stack
+
+node & npm
+----------
+
+Install ubuntu node.
+
+> sudo apt-get install nodejs
+> nodejs --version
+v10.5.2
+
+Install ubuntu npm.
+
+> sudo apt-get install npm
+> npm --version
+5.8.0
+
+Set global node directory for packages to npmglobal in your user and update the configuraiton of npm.
+
+> mkdir ~/npm-global
+> npm config set prefix '~/npm-global'
+
+Add npm-global to your PATH in .profile. Put it last in the file.
+
+	export PATH=~/npm-global/bin:$PATH last in your .profile:
+
+After adding it to .profile.
+
+>source .profile
+
+purescript
+----------
+
+>sudo apt-get install libtinfo5
+>npm install -g purescript
+>npm install -g pulp
+>npm install -g yarn
+>npm install -g parcel
+>npm install -g http-server
+>npm install -g cssnano
+>npm install -g bower
+
+build portal
+------------
+
+Do the following in the portal directory.
+
+>yarn
+>yarn build
+
+build server
+------------
+
+Do the following in the server directory.
+
+>stack setup
+>stack build
+
+
