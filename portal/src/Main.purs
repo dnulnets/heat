@@ -78,7 +78,7 @@ main = HA.runHalogenAff do
   body ← HA.awaitBody
   let
     env ∷ Environment
-    env = { baseURL : BaseURL "http://localhost:3000",
+    env = { baseURL : BaseURL "http://localhost:30409",
             userInfo : currentUserInfo }
   io ← runUI (rootComponent env) unit body
   

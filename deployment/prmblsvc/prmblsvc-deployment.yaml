@@ -1,0 +1,19 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: prmblsvc
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: prmblsvc
+  template:
+    metadata:
+      labels:
+        app: prmblsvc
+    spec:
+      containers:
+        - name: prmblsvc-container
+          image: localhost:32000/prmblsvc:1
+          ports:
+            - containerPort: 3000

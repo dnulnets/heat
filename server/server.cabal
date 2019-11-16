@@ -1,19 +1,19 @@
 cabal-version: 1.12
 
--- This file has been generated from package.yaml by hpack version 0.31.1.
+-- This file has been generated from package.yaml by hpack version 0.31.2.
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: c4fc9afec65e8d4fcc918f3c3fa45e8f23306cac24909a394e03b22d660746f2
+-- hash: b0c72dd075e27b7991daf4e4f094c322c236c349b81b5fe7cca694fbe5312825
 
 name:           server
 version:        0.1.0.0
-description:    Please see the README on GitHub at <https://github.com/githubuser/server#readme>
-homepage:       https://github.com/githubuser/server#readme
-bug-reports:    https://github.com/githubuser/server/issues
-author:         Author name here
-maintainer:     example@example.com
-copyright:      2019 Author name here
+description:    Please see the README on GitHub at https://github.com/dnulnets/heat
+homepage:       https://github.com/https://github.com/dnulnets/heat#readme
+bug-reports:    https://github.com/https://github.com/dnulnets/heat/issues
+author:         Tomas Stenlund
+maintainer:     tomas.stenlund@telia.com
+copyright:      2019 Tomas Stenlund
 license:        BSD3
 license-file:   LICENSE
 build-type:     Simple
@@ -23,7 +23,7 @@ extra-source-files:
 
 source-repository head
   type: git
-  location: https://github.com/githubuser/server
+  location: https://github.com/https://github.com/dnulnets/heat
 
 library
   exposed-modules:

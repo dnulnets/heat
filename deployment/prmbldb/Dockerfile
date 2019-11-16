@@ -1,0 +1,5 @@
+FROM postgres:11
+ENV POSTGRES_PASSWORD heatserver
+ENV POSTGRES_USER heatserver
+ENV POSTGRES_DB heat
+

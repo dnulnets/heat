@@ -12,7 +12,7 @@
   },	
   "dependencies": {
     "purescript-effect": "~2.0.1",
-    "purescript-halogen": "#5.0.0-rc.6",
+    "purescript-halogen": "#5.0.0-rc.7",
     "purescript-routing": "~9.0.0",
     "purescript-argonaut-core": "~5.0.0",
     "purescript-argonaut-codecs": "~6.0.1",

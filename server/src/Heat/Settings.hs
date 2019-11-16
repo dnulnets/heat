@@ -38,7 +38,7 @@ defaultSettings = AppSettings {
   tokenSecret = "mandelmassa"     -- ^The default token secret
   ,tokenExpiration = 60*60         -- ^The default token is only valid for 1 hour
   
-  ,databaseConf = PostgresConf "postgresql://heatserver:heatserver@localhost/heat" 5 -- ^The default postgres database
+  ,databaseConf = PostgresConf "postgresql://heatserver:heatserver@prmbldb/heat" 5 -- ^The default postgres database
   
   ,passwordCost = 10 -- ^The default password hashing cost
   }
